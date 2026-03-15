@@ -44,7 +44,7 @@ const ListOrders = () => {
       // console.log("accessToken", accessToken)
       // await dispatch(DeliveryPartnersApi(accessToken, dispatch));
 
-      const response = await fetch("http://178.16.139.77:8000/api/v1/delivery-persons/", {
+      const response = await fetch("https://admin.veggafresh.com/be/api/v1/delivery-persons/", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
@@ -88,7 +88,7 @@ const ListOrders = () => {
       const userData = JSON.parse(localStorage.getItem("user"));
       const accessToken = userData?.access;
 
-      const response = await fetch(`http://178.16.139.77:8000/api/v1/orders-filters?user_email=${filters?.emailSearch}&order_date_from=${filters?.fromDate}&order_date_to=${filters?.toDate}&order_id=${filters?.searchOrderID}`, {
+      const response = await fetch(`https://admin.veggafresh.com/be/api/v1/orders-filters?user_email=${filters?.emailSearch}&order_date_from=${filters?.fromDate}&order_date_to=${filters?.toDate}&order_id=${filters?.searchOrderID}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
@@ -123,7 +123,7 @@ const ListOrders = () => {
   };
 
   const sendRequest = (accessToken, requestBody, id) => {
-    return fetch(`http://178.16.139.77:8000/api/v1/orders/${id ? id : getID}/update-status/`, {
+    return fetch(`https://admin.veggafresh.com/be/api/v1/orders/${id ? id : getID}/update-status/`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -134,7 +134,7 @@ const ListOrders = () => {
   };
 
   const getUpdatedTokens = async (refreshToken) => {
-    const response = await fetch("http://178.16.139.77:8000/api/v1/token/refresh/", {
+    const response = await fetch("https://admin.veggafresh.com/be/api/v1/token/refresh/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh: refreshToken }),
@@ -216,7 +216,7 @@ const ListOrders = () => {
       mobile: deliveryInfo?.mobile
     };
 
-    return await fetchWithAuth(`http://178.16.139.77:8000/api/v1/delivery-persons/`, {
+    return await fetchWithAuth(`https://admin.veggafresh.com/be/api/v1/delivery-persons/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -268,15 +268,15 @@ const ListOrders = () => {
       const accessToken = await userData?.access;
       let apiurl;
       if (type === "1") {
-        apiurl = "http://178.16.139.77:8000/api/v1/orders/"
+        apiurl = "https://admin.veggafresh.com/be/api/v1/orders/"
       } else if (type === "2") {
-        apiurl = "http://178.16.139.77:8000/api/v1/orders/status/Accepted/"
+        apiurl = "https://admin.veggafresh.com/be/api/v1/orders/status/Accepted/"
       } else if (type === "3") {
-        apiurl = "http://178.16.139.77:8000/api/v1/orders/status/Cancelled/"
+        apiurl = "https://admin.veggafresh.com/be/api/v1/orders/status/Cancelled/"
       } else if (type === "4") {
-        apiurl = "http://178.16.139.77:8000/api/v1/orders/status/Assigned to Delivery Partner/"
+        apiurl = "https://admin.veggafresh.com/be/api/v1/orders/status/Assigned to Delivery Partner/"
       } else if (type === "5") {
-        apiurl = "http://178.16.139.77:8000/api/v1/orders/status/Delivered/"
+        apiurl = "https://admin.veggafresh.com/be/api/v1/orders/status/Delivered/"
       }
       const response = await fetch(apiurl, {
         headers: {
@@ -305,7 +305,7 @@ const ListOrders = () => {
       const userData = await JSON.parse(localStorage.getItem("user"));
       const accessToken = await userData?.access;
 
-      const response = await fetch("http://178.16.139.77:8000/api/v1/order-status/", {
+      const response = await fetch("https://admin.veggafresh.com/be/api/v1/order-status/", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",

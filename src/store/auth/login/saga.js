@@ -17,7 +17,7 @@ function* loginUser({ payload: { user, history } }) {
             yield put(loginUserSuccessful(response));
             history('/dashboard');
         } else {
-            const response = yield call(fetch, "http://178.16.139.77:8000/api/v1/login/", {
+            const response = yield call(fetch, "https://admin.veggafresh.com/be/api/v1/login/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username: user.username, password: user.password }),
@@ -31,7 +31,7 @@ function* loginUser({ payload: { user, history } }) {
             const data = yield call([response, response.json]);
             const JsonResponse = JSON.stringify(data.data);
             localStorage.setItem("user", JsonResponse);
-            
+
             yield put(loginUserSuccessful(data.data));
             history('/dashboard');
         }

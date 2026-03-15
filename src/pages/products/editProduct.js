@@ -16,7 +16,7 @@ import { updateProduct } from "../../store/actions";
 import { useNavigate } from "react-router-dom";
 
 const EditProduct = () => {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const navigate = useNavigate();
   const breadcrumbItems = [
     { title: "Product", link: "#" },
@@ -54,13 +54,13 @@ const EditProduct = () => {
   useEffect(() => {
     fetchCategories();
   }, []);
-  
+
   useEffect(() => {
     if (id) {
       fetchProductDetails(id);
     }
   }, [id]);
-  
+
   useEffect(() => {
     if (formValues.category && categories.length > 0) {
       const categoryObj = categories.find((cat) => cat.id === parseInt(formValues.category));
@@ -70,7 +70,7 @@ const EditProduct = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("http://178.16.139.77:8000/api/v1/categories/", {
+      const res = await fetch("https://admin.veggafresh.com/be/api/v1/categories/", {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -85,7 +85,7 @@ const EditProduct = () => {
 
   const fetchProductDetails = async (productId) => {
     try {
-      const res = await fetch(`http://178.16.139.77:8000/api/v1/products/${productId}/`, {
+      const res = await fetch(`https://admin.veggafresh.com/be/api/v1/products/${productId}/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -196,89 +196,89 @@ const EditProduct = () => {
 
   return (
     <div className="page-content">
-    <Container fluid>
-      <Breadcrumb title="Edit Product" breadcrumbItems={breadcrumbItems} />
-      <Row>
-        <Col lg={12}>
-          <Card>
-            <CardBody>
-              {/* <CardTitle tag="h4">Edit Product</CardTitle> */}
-              <Form onSubmit={handleSubmit}>
-                {/* Product Info Section */}
-                <Row className="mb-3">
-                  <Col md={6}>
-                    <Label>Product Name</Label>
-                    <Input
-                      type="text"
-                      name="name"
-                      value={formValues.name}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </Col>
-                  <Col md={6}>
-                    <Label>Brand</Label>
-                    <Input
-                      type="text"
-                      name="brand"
-                      value={formValues.brand}
-                      onChange={handleInputChange}
-                    />
-                  </Col>
-                </Row>
-  
-                <Row className="mb-3">
-                  <Col md={6}>
-                  <Label>Category</Label>
-                  <Select
-  name="category"
-  value={
-    categories
-      .map((cat) => ({ value: cat.id, label: cat.name }))
-      .find((cat) => cat.value === parseInt(formValues.category)) || null
-  }
-  onChange={(selected) => {
-    const cat = categories.find((item) => item.id === selected.value);
-    setFormValues({ ...formValues, category: selected.value, subcategory: "" });
-    setSubcategories(cat?.subcategories || []);
-  }}
-  options={categories.map((cat) => ({
-    value: cat.id,
-    label: cat.name,
-  }))}
-  placeholder="Select Category"
-  isSearchable
-/>
+      <Container fluid>
+        <Breadcrumb title="Edit Product" breadcrumbItems={breadcrumbItems} />
+        <Row>
+          <Col lg={12}>
+            <Card>
+              <CardBody>
+                {/* <CardTitle tag="h4">Edit Product</CardTitle> */}
+                <Form onSubmit={handleSubmit}>
+                  {/* Product Info Section */}
+                  <Row className="mb-3">
+                    <Col md={6}>
+                      <Label>Product Name</Label>
+                      <Input
+                        type="text"
+                        name="name"
+                        value={formValues.name}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </Col>
+                    <Col md={6}>
+                      <Label>Brand</Label>
+                      <Input
+                        type="text"
+                        name="brand"
+                        value={formValues.brand}
+                        onChange={handleInputChange}
+                      />
+                    </Col>
+                  </Row>
 
-                  </Col>
-                  <Col md={6}>
-                  <Label>Subcategory</Label>
-                  <Select
-  name="subcategory"
-  value={
-    subcategories
-      .map((sub) => ({ value: sub.id, label: sub.name }))
-      .find((sub) => sub.value === parseInt(formValues.subcategory)) || null
-  }
-  onChange={(selected) =>
-    setFormValues({ ...formValues, subcategory: selected?.value || "" })
-  }
-  options={subcategories.map((sub) => ({
-    value: sub.id,
-    label: sub.name,
-  }))}
-  placeholder="Select Subcategory"
-  isSearchable
-  isDisabled={!formValues.category}
-/>
+                  <Row className="mb-3">
+                    <Col md={6}>
+                      <Label>Category</Label>
+                      <Select
+                        name="category"
+                        value={
+                          categories
+                            .map((cat) => ({ value: cat.id, label: cat.name }))
+                            .find((cat) => cat.value === parseInt(formValues.category)) || null
+                        }
+                        onChange={(selected) => {
+                          const cat = categories.find((item) => item.id === selected.value);
+                          setFormValues({ ...formValues, category: selected.value, subcategory: "" });
+                          setSubcategories(cat?.subcategories || []);
+                        }}
+                        options={categories.map((cat) => ({
+                          value: cat.id,
+                          label: cat.name,
+                        }))}
+                        placeholder="Select Category"
+                        isSearchable
+                      />
 
-                  </Col>
-                </Row>
-  
-                <Row className="mb-3">
-                  <Col>
-                    <Label>Description</Label>
-                   
+                    </Col>
+                    <Col md={6}>
+                      <Label>Subcategory</Label>
+                      <Select
+                        name="subcategory"
+                        value={
+                          subcategories
+                            .map((sub) => ({ value: sub.id, label: sub.name }))
+                            .find((sub) => sub.value === parseInt(formValues.subcategory)) || null
+                        }
+                        onChange={(selected) =>
+                          setFormValues({ ...formValues, subcategory: selected?.value || "" })
+                        }
+                        options={subcategories.map((sub) => ({
+                          value: sub.id,
+                          label: sub.name,
+                        }))}
+                        placeholder="Select Subcategory"
+                        isSearchable
+                        isDisabled={!formValues.category}
+                      />
+
+                    </Col>
+                  </Row>
+
+                  <Row className="mb-3">
+                    <Col>
+                      <Label>Description</Label>
+
                       <CKEditor
                         editor={ClassicEditor}
                         data={formValues.description}
@@ -287,132 +287,132 @@ const EditProduct = () => {
                           setFormValues({ ...formValues, description: data });
                         }}
                       />
-                  </Col>
-                </Row>
-  
-                {/* Variants */}
-                <CardTitle tag="h5" className="mt-4">Product Variants</CardTitle>
-                {variants.map((variant, index) => (
-                  <Row key={index} className="mb-3 align-items-end">
-                    <Col md={2}>
-                      <Label>Quantity</Label>
-                      <Input
-                        type="text"
-                        name="quantity"
-                        value={variant.quantity}
-                        onChange={(e) => handleVariantChange(index, e)}
-                      />
-                    </Col>
-                    <Col md={2}>
-                      <Label>Unit</Label>
-                      <Input
-                        type="text"
-                        name="unit"
-                        value={variant.unit}
-                        onChange={(e) => handleVariantChange(index, e)}
-                      />
-                    </Col>
-                    <Col md={2}>
-                      <Label>Price</Label>
-                      <Input
-                        type="number"
-                        name="price"
-                        value={variant.price}
-                        onChange={(e) => handleVariantChange(index, e)}
-                      />
-                    </Col>
-                    <Col md={2}>
-                      <Label>Discounted Price</Label>
-                      <Input
-                        type="number"
-                        name="discounted_price"
-                        value={variant.discounted_price}
-                        onChange={(e) => handleVariantChange(index, e)}
-                      />
-                    </Col>
-                    <Col md={2}>
-                      <Label>Stock</Label>
-                      <Input
-                        type="number"
-                        name="stock"
-                        value={variant.stock}
-                        onChange={(e) => handleVariantChange(index, e)}
-                      />
-                    </Col>
-                    <Col md={1}>
-                      <Label>Available</Label>
-                      <Input
-                        type="checkbox"
-                        name="is_available"
-                        checked={variant.is_available}
-                        onChange={(e) => handleVariantChange(index, e)}
-                      />
-                    </Col>
-                    <Col md={1}>
-                      {variants.length > 1 && (
-                        <Button color="danger" onClick={() => removeVariant(index)}>X</Button>
-                      )}
                     </Col>
                   </Row>
-                ))}
-                <Button color="info" onClick={addVariant}>Add Variant</Button>
-                <Row className="dropzone-previews mt-3">
-  {selectedFiles?.map((file, i) => (
-    <Col key={i} md={3}>
-      <div className="position-relative border p-2 mb-2">
-        <img
-          src={file.preview}
-          alt=""
-          className="img-fluid"
-          style={{ maxHeight: "200px", objectFit: "cover" }}
-        />
-        <Button
-          type="button"
-          color="danger"
-          size="sm"
-          className="position-absolute top-0 end-0 m-1"
-          onClick={() => handleImageDelete(i)}
-        >
-          <i className="mdi mdi-trash-can font-size-18"></i>
-        </Button>
-        <p className="text-center mt-2">{file.formattedSize}</p>
-      </div>
-    </Col>
-  ))}
-</Row>
-                {/* Images Upload */}
-                <CardTitle tag="h5" className="mt-4">Upload Images</CardTitle>
-                <Dropzone onDrop={handleAcceptedFiles}>
-                  {({ getRootProps, getInputProps }) => (
-                    <div className="dropzone">
-                      <div className="dz-message needsclick mt-2" {...getRootProps()}>
-                        <input {...getInputProps()} />
-                        <div>
-                          <i className="display-4 text-muted bx bx-cloud-upload" />
-                          <h5>Drop files here or click to upload.</h5>
+
+                  {/* Variants */}
+                  <CardTitle tag="h5" className="mt-4">Product Variants</CardTitle>
+                  {variants.map((variant, index) => (
+                    <Row key={index} className="mb-3 align-items-end">
+                      <Col md={2}>
+                        <Label>Quantity</Label>
+                        <Input
+                          type="text"
+                          name="quantity"
+                          value={variant.quantity}
+                          onChange={(e) => handleVariantChange(index, e)}
+                        />
+                      </Col>
+                      <Col md={2}>
+                        <Label>Unit</Label>
+                        <Input
+                          type="text"
+                          name="unit"
+                          value={variant.unit}
+                          onChange={(e) => handleVariantChange(index, e)}
+                        />
+                      </Col>
+                      <Col md={2}>
+                        <Label>Price</Label>
+                        <Input
+                          type="number"
+                          name="price"
+                          value={variant.price}
+                          onChange={(e) => handleVariantChange(index, e)}
+                        />
+                      </Col>
+                      <Col md={2}>
+                        <Label>Discounted Price</Label>
+                        <Input
+                          type="number"
+                          name="discounted_price"
+                          value={variant.discounted_price}
+                          onChange={(e) => handleVariantChange(index, e)}
+                        />
+                      </Col>
+                      <Col md={2}>
+                        <Label>Stock</Label>
+                        <Input
+                          type="number"
+                          name="stock"
+                          value={variant.stock}
+                          onChange={(e) => handleVariantChange(index, e)}
+                        />
+                      </Col>
+                      <Col md={1}>
+                        <Label>Available</Label>
+                        <Input
+                          type="checkbox"
+                          name="is_available"
+                          checked={variant.is_available}
+                          onChange={(e) => handleVariantChange(index, e)}
+                        />
+                      </Col>
+                      <Col md={1}>
+                        {variants.length > 1 && (
+                          <Button color="danger" onClick={() => removeVariant(index)}>X</Button>
+                        )}
+                      </Col>
+                    </Row>
+                  ))}
+                  <Button color="info" onClick={addVariant}>Add Variant</Button>
+                  <Row className="dropzone-previews mt-3">
+                    {selectedFiles?.map((file, i) => (
+                      <Col key={i} md={3}>
+                        <div className="position-relative border p-2 mb-2">
+                          <img
+                            src={file.preview}
+                            alt=""
+                            className="img-fluid"
+                            style={{ maxHeight: "200px", objectFit: "cover" }}
+                          />
+                          <Button
+                            type="button"
+                            color="danger"
+                            size="sm"
+                            className="position-absolute top-0 end-0 m-1"
+                            onClick={() => handleImageDelete(i)}
+                          >
+                            <i className="mdi mdi-trash-can font-size-18"></i>
+                          </Button>
+                          <p className="text-center mt-2">{file.formattedSize}</p>
+                        </div>
+                      </Col>
+                    ))}
+                  </Row>
+                  {/* Images Upload */}
+                  <CardTitle tag="h5" className="mt-4">Upload Images</CardTitle>
+                  <Dropzone onDrop={handleAcceptedFiles}>
+                    {({ getRootProps, getInputProps }) => (
+                      <div className="dropzone">
+                        <div className="dz-message needsclick mt-2" {...getRootProps()}>
+                          <input {...getInputProps()} />
+                          <div>
+                            <i className="display-4 text-muted bx bx-cloud-upload" />
+                            <h5>Drop files here or click to upload.</h5>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </Dropzone>
-              
-  
-                {/* Submit */}
-                <div className="text-end mt-4">
-                  <Button color="success" type="submit" disabled={loading}>
-                    {loading ? <i className="bx bx-loader bx-spin font-size-16 align-middle me-2"></i> : null}
-                    Update Product
-                  </Button>
-                </div>
-              </Form>
-            </CardBody>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+                    )}
+                  </Dropzone>
+
+
+                  {/* Submit */}
+                  <div className="text-end mt-4">
+                    <Button color="success" type="submit" disabled={loading}>
+                      {loading ? <i className="bx bx-loader bx-spin font-size-16 align-middle me-2"></i> : null}
+                      Update Product
+                    </Button>
+                  </div>
+                </Form>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
-  
+
 };
 
 export default EditProduct;

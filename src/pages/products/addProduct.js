@@ -65,7 +65,7 @@ const AddProduct = () => {
     const fetchCategories = async () => {
       try {
         const userData = JSON.parse(localStorage.getItem("user"));
-        const response = await fetch("http://178.16.139.77:8000/api/v1/categories/", {
+        const response = await fetch("https://admin.veggafresh.com/be/api/v1/categories/", {
           headers: { Authorization: `Bearer ${userData?.access}` },
         });
         const result = await response.json();
@@ -88,7 +88,7 @@ const AddProduct = () => {
       const fetchProductDetails = async () => {
         try {
           const userData = JSON.parse(localStorage.getItem("user"));
-          const response = await fetch(`http://178.16.139.77:8000/api/v1/products/${id}/`, {
+          const response = await fetch(`https://admin.veggafresh.com/be/api/v1/products/${id}/`, {
             headers: { Authorization: `Bearer ${userData?.access}` },
           });
           const result = await response.json();

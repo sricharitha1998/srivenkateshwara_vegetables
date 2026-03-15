@@ -51,7 +51,7 @@ const UpdateEmployee = () => {
   const fetchEmployeeDetails = async (employeeId) => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-      const response = await fetch(`http://178.16.139.77:8000/api/v1/employees/${employeeId}/`, {
+      const response = await fetch(`https://admin.veggafresh.com/be/api/v1/employees/${employeeId}/`, {
         headers: {
           Authorization: `Bearer ${user?.access}`,
         },
@@ -59,44 +59,44 @@ const UpdateEmployee = () => {
 
       if (!response.ok) throw new Error("Failed to fetch employee data");
       const data = await response.json();
-console.log("data",data)
-setFormData({
-  firstName: data?.data?.first_name || "",
-  lastName: data?.data?.last_name || "",
-  email: data?.data?.email || "",
-  mobile: data?.data?.mobile || "",
-  address: data?.data?.address || "",
-  permissions: {
-    products: [
-      data?.data?.permissions?.can_add_product && "add",
-      data?.data?.permissions?.can_edit_product && "update",
-      data?.data?.permissions?.can_delete_product && "delete",
-      data?.data?.permissions?.can_view_product && "view",
-    ].filter(Boolean),
-    categories: [
-      data?.data?.permissions?.can_add_category && "add",
-      data?.data?.permissions?.can_edit_category && "update",
-      data?.data?.permissions?.can_view_category && "view",
-      data?.data?.permissions?.can_delete_category && "delete",
-    ].filter(Boolean),
-    subcategories: [
-      data?.data?.permissions?.can_add_subcategory && "add",
-      data?.data?.permissions?.can_edit_subcategory && "update",
-      data?.data?.permissions?.can_view_subcategory && "view",
-      data?.data?.permissions?.can_delete_subcategory && "delete",
-    ].filter(Boolean),
-    orders: [
-      data?.data?.permissions?.can_manage_orders && "manage orders",
-      data?.data?.permissions?.can_manage_delivery_status && "manage delivery status",
-    ].filter(Boolean),
-    payments: [
-      data?.data?.permissions?.can_view_payment && "view",
-    ].filter(Boolean),
-    endusers: [
-      data?.data?.permissions?.can_view_users && "view",
-    ].filter(Boolean),
-  },
-});
+      console.log("data", data)
+      setFormData({
+        firstName: data?.data?.first_name || "",
+        lastName: data?.data?.last_name || "",
+        email: data?.data?.email || "",
+        mobile: data?.data?.mobile || "",
+        address: data?.data?.address || "",
+        permissions: {
+          products: [
+            data?.data?.permissions?.can_add_product && "add",
+            data?.data?.permissions?.can_edit_product && "update",
+            data?.data?.permissions?.can_delete_product && "delete",
+            data?.data?.permissions?.can_view_product && "view",
+          ].filter(Boolean),
+          categories: [
+            data?.data?.permissions?.can_add_category && "add",
+            data?.data?.permissions?.can_edit_category && "update",
+            data?.data?.permissions?.can_view_category && "view",
+            data?.data?.permissions?.can_delete_category && "delete",
+          ].filter(Boolean),
+          subcategories: [
+            data?.data?.permissions?.can_add_subcategory && "add",
+            data?.data?.permissions?.can_edit_subcategory && "update",
+            data?.data?.permissions?.can_view_subcategory && "view",
+            data?.data?.permissions?.can_delete_subcategory && "delete",
+          ].filter(Boolean),
+          orders: [
+            data?.data?.permissions?.can_manage_orders && "manage orders",
+            data?.data?.permissions?.can_manage_delivery_status && "manage delivery status",
+          ].filter(Boolean),
+          payments: [
+            data?.data?.permissions?.can_view_payment && "view",
+          ].filter(Boolean),
+          endusers: [
+            data?.data?.permissions?.can_view_users && "view",
+          ].filter(Boolean),
+        },
+      });
 
     } catch (error) {
       console.error("Error fetching employee:", error);
@@ -123,7 +123,7 @@ setFormData({
   };
 
   const getUpdatedTokens = async (refreshToken) => {
-    const response = await fetch("http://178.16.139.77:8000/api/v1/token/refresh/", {
+    const response = await fetch("https://admin.veggafresh.com/be/api/v1/token/refresh/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh: refreshToken }),
@@ -136,7 +136,7 @@ setFormData({
 
   const sendUpdateRequest = (accessToken, requestBody) => {
     console.log("requestBody", requestBody)
-    return fetch(`http://178.16.139.77:8000/api/v1/employees/${id}/`, {
+    return fetch(`https://admin.veggafresh.com/be/api/v1/employees/${id}/`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -174,7 +174,7 @@ setFormData({
         can_manage_orders: formData?.permissions?.orders?.includes("manage orders") ? true : false,
         can_manage_delivery_status: formData?.permissions?.orders?.includes("manage delivery status") ? true : false,
         can_view_payment: formData?.permissions?.payments?.includes("view") ? true : false,
-        can_view_users:  formData?.permissions?.endusers?.includes("view") ? true : false,
+        can_view_users: formData?.permissions?.endusers?.includes("view") ? true : false,
       },
     };
 
@@ -352,7 +352,7 @@ setFormData({
 
                     <div className="text-center mt-4">
                       <Button type="submit" color="primary" className="me-1">
-                        Update 
+                        Update
                       </Button>
                     </div>
                   </Form>

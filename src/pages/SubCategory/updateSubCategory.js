@@ -30,7 +30,7 @@ const UpdateSubCategory = () => {
     subCategoryName: "",
     categoryType: "",
   });
-  
+
   const [imageFile, setImageFile] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
 
@@ -67,9 +67,9 @@ const UpdateSubCategory = () => {
   };
 
   const getUserData = () => JSON.parse(localStorage.getItem("user")) || {};
-  
+
   const getUpdatedTokens = async (refreshToken) => {
-    const response = await fetch("http://178.16.139.77:8000/api/v1/token/refresh/", {
+    const response = await fetch("https://admin.veggafresh.com/be/api/v1/token/refresh/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh: refreshToken }),
@@ -110,7 +110,7 @@ const UpdateSubCategory = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetchWithAuth("http://178.16.139.77:8000/api/v1/categories/", {
+      const res = await fetchWithAuth("https://admin.veggafresh.com/be/api/v1/categories/", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -125,7 +125,7 @@ const UpdateSubCategory = () => {
 
   const fetchSubCategory = async () => {
     try {
-      const res = await fetchWithAuth(`http://178.16.139.77:8000/api/v1/subcategories/${id}/`, {
+      const res = await fetchWithAuth(`https://admin.veggafresh.com/be/api/v1/subcategories/${id}/`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -136,7 +136,7 @@ const UpdateSubCategory = () => {
         categoryType: result?.data?.category?.toString() || "",
       });
       if (result?.data?.image) {
-        setPreviewImage(result.data.image); 
+        setPreviewImage(result.data.image);
       }
     } catch (err) {
       console.error("Error fetching subcategory:", err);

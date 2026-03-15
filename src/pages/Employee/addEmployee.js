@@ -35,7 +35,7 @@ const AddEmployee = () => {
       products: [],
       categories: [],
       orders: [],
-      subcategories: [], 
+      subcategories: [],
       payments: [],
       endusers: []
     },
@@ -80,7 +80,7 @@ const AddEmployee = () => {
   };
 
   const getUpdatedTokens = async (refreshToken) => {
-    const response = await fetch("http://178.16.139.77:8000/api/v1/token/refresh/", {
+    const response = await fetch("https://admin.veggafresh.com/be/api/v1/token/refresh/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh: refreshToken }),
@@ -92,15 +92,15 @@ const AddEmployee = () => {
   };
 
   const sendRequest = (accessToken, requestBody) => {
-    return fetch("http://178.16.139.77:8000/api/v1/employees/create/", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(requestBody),
-  });
-}
+    return fetch("https://admin.veggafresh.com/be/api/v1/employees/create/", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -135,7 +135,7 @@ const AddEmployee = () => {
         can_manage_orders: formData?.permissions?.orders?.includes("manage orders") ? true : false,
         can_manage_delivery_status: formData?.permissions?.orders?.includes("manage delivery status") ? true : false,
         can_view_payment: formData?.permissions?.payments?.includes("view") ? true : false,
-        can_view_users:  formData?.permissions?.endusers?.includes("view") ? true : false,
+        can_view_users: formData?.permissions?.endusers?.includes("view") ? true : false,
       },
     };
 
@@ -266,25 +266,25 @@ const AddEmployee = () => {
                         required
                       /> */}
                       <Input
-    id="password"
-    name="password"
-    type={showPassword ? "text" : "password"}
-    value={formData.password}
-    onChange={handleChange}
-    required
-  />
-  <FontAwesomeIcon
-    icon={showPassword ? faEyeSlash : faEye}
-    onClick={() => setShowPassword(!showPassword)}
-    style={{
-      position: "absolute",
-      top: "50%",
-      right: "15px",
-      transform: "translateY(-50%)",
-      cursor: "pointer",
-      color: "#888"
-    }}
-  />
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                      />
+                      <FontAwesomeIcon
+                        icon={showPassword ? faEyeSlash : faEye}
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{
+                          position: "absolute",
+                          top: "50%",
+                          right: "15px",
+                          transform: "translateY(-50%)",
+                          cursor: "pointer",
+                          color: "#888"
+                        }}
+                      />
                     </div>
 
                     <div className="mb-3">
@@ -351,7 +351,7 @@ const AddEmployee = () => {
 
                     <div className="text-center mt-4">
                       <Button type="submit" color="primary" className="me-1">
-                        Save 
+                        Save
                       </Button>
                     </div>
                   </Form>

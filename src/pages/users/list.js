@@ -26,7 +26,7 @@ const ListUsers = () => {
       const userData = JSON.parse(localStorage.getItem("user"));
       const accessToken = userData?.access;
 
-      const response = await fetch("http://178.16.139.77:8000/api/v1/all-users/", {
+      const response = await fetch("https://admin.veggafresh.com/be/api/v1/all-users/", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,

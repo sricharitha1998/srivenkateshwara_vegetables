@@ -6,12 +6,12 @@ export const fetchOrders = createAsyncThunk("orders/fetchOrders", async (type, {
   try {
     const userData = JSON.parse(localStorage.getItem("user"));
     const accessToken = userData?.access;
-    let url = "http://178.16.139.77:8000/api/v1/orders/";
+    let url = "https://admin.veggafresh.com/be/api/v1/orders/";
 
-    if (type === "2") url = "http://178.16.139.77:8000/api/v1/orders/status/Accepted/";
-    if (type === "3") url = "http://178.16.139.77:8000/api/v1/orders/status/Cancelled/";
-    if (type === "4") url = "http://178.16.139.77:8000/api/v1/orders/status/Assigned to Delivery Partner/";
-    if (type === "5") url = "http://178.16.139.77:8000/api/v1/orders/status/Delivered/";
+    if (type === "2") url = "https://admin.veggafresh.com/be/api/v1/orders/status/Accepted/";
+    if (type === "3") url = "https://admin.veggafresh.com/be/api/v1/orders/status/Cancelled/";
+    if (type === "4") url = "https://admin.veggafresh.com/be/api/v1/orders/status/Assigned to Delivery Partner/";
+    if (type === "5") url = "https://admin.veggafresh.com/be/api/v1/orders/status/Delivered/";
 
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
@@ -30,7 +30,7 @@ export const fetchDeliveryPersons = createAsyncThunk("orders/fetchDeliveryPerson
     const userData = JSON.parse(localStorage.getItem("user"));
     const accessToken = userData?.access;
 
-    const response = await fetch("http://178.16.139.77:8000/api/v1/delivery-persons/", {
+    const response = await fetch("https://admin.veggafresh.com/be/api/v1/delivery-persons/", {
       headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
     });
 

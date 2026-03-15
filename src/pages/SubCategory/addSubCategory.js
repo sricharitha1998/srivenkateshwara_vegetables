@@ -26,12 +26,12 @@ const AddSubCategory = () => {
   }));
 
   const [categories, setCategories] = useState([]);
-  
+
   const [formData, setFormData] = useState({
     subCategoryName: "",
     categoryType: "",
   });
-  
+
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
@@ -68,7 +68,7 @@ const AddSubCategory = () => {
   };
 
   const getUpdatedTokens = async (refreshToken) => {
-    const response = await fetch("http://178.16.139.77:8000/api/v1/token/refresh/", {
+    const response = await fetch("https://admin.veggafresh.com/be/api/v1/token/refresh/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh: refreshToken }),
@@ -111,7 +111,7 @@ const AddSubCategory = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetchWithAuth("http://178.16.139.77:8000/api/v1/categories/", {
+      const response = await fetchWithAuth("https://admin.veggafresh.com/be/api/v1/categories/", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -143,27 +143,27 @@ const AddSubCategory = () => {
                       <div className="mb-3">
                         <Label htmlFor="categoryType">Category Type</Label>
                         <Select
-    id="categoryType"
-    name="categoryType"
-    options={categories.map((item) => ({
-      value: item.id,
-      label: item.name,
-    }))}
-    value={categories
-      .map((item) => ({
-        value: item.id,
-        label: item.name,
-      }))
-      .find((option) => option.value === formData.categoryType)}
-    onChange={(selectedOption) =>
-      setFormData((prev) => ({
-        ...prev,
-        categoryType: selectedOption ? selectedOption.value : "",
-      }))
-    }
-    placeholder="-- Select Type --"
-    isClearable
-  />
+                          id="categoryType"
+                          name="categoryType"
+                          options={categories.map((item) => ({
+                            value: item.id,
+                            label: item.name,
+                          }))}
+                          value={categories
+                            .map((item) => ({
+                              value: item.id,
+                              label: item.name,
+                            }))
+                            .find((option) => option.value === formData.categoryType)}
+                          onChange={(selectedOption) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              categoryType: selectedOption ? selectedOption.value : "",
+                            }))
+                          }
+                          placeholder="-- Select Type --"
+                          isClearable
+                        />
                       </div>
                     </Col>
 
