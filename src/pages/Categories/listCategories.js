@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 import DataTable from "react-data-table-component";
 
-const API_BASE = "http://178.16.139.77:8000/api/v1";
+const API_BASE = process.env.REACT_APP_API_URL;
 
 const ListCategories = () => {
   const [data, setData] = useState([]);

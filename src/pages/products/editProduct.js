@@ -70,7 +70,7 @@ const EditProduct = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("https://admin.veggafresh.com/be/api/v1/categories/", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/categories/`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -85,7 +85,7 @@ const EditProduct = () => {
 
   const fetchProductDetails = async (productId) => {
     try {
-      const res = await fetch(`https://admin.veggafresh.com/be/api/v1/products/${productId}/`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/products/${productId}/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

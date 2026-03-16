@@ -96,5 +96,5 @@
   "resolutions": {
     "moment": "2.24.0"
   },
-  "proxy": "http://178.16.139.77:8000"
+  "proxy": "https://admin.veggafresh.com/be"
 }

@@ -8,7 +8,7 @@ import {
 } from "./actions";
 import axios from "axios";
 
-const API_BASE = "http://178.16.139.77:8000/api/v1";
+const API_BASE = process.env.REACT_APP_API_URL;
 
 const refreshAccessToken = async (refreshToken) => {
     const response = await axios.post(`${API_BASE}/token/refresh/`, { refresh: refreshToken });

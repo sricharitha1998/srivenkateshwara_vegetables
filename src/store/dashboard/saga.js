@@ -2,7 +2,7 @@ import { takeEvery, put, all, call, fork } from "redux-saga/effects";
 import { FETCH_DASHBOARD_DATA } from "./actionTypes";
 import { fetchDashboardDataSuccess, fetchDashboardDataFail } from "./actions";
 
-const API_BASE = "http://178.16.139.77:8000/api/v1";
+const API_BASE = process.env.REACT_APP_API_URL;
 
 const getAuthHeaders = (accessToken) => ({
     Authorization: `Bearer ${accessToken}`,

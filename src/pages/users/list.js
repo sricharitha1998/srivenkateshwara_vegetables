@@ -26,7 +26,7 @@ const ListUsers = () => {
       const userData = JSON.parse(localStorage.getItem("user"));
       const accessToken = userData?.access;
 
-      const response = await fetch("https://admin.veggafresh.com/be/api/v1/all-users/", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/all-users/`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,

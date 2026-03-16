@@ -16,7 +16,7 @@ import { Link } from "react-router-dom";
 import DataTable from "react-data-table-component";
 
 const ListProducts = () => {
-  const API_BASE = "http://178.16.139.77:8000/api/v1";
+  const API_BASE = process.env.REACT_APP_API_URL;
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);

@@ -24,7 +24,7 @@ const ListEmployees = () => {
   };
 
   const refreshToken = async (refresh) => {
-    const response = await fetch("https://admin.veggafresh.com/be/api/v1/token/refresh/", {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/token/refresh/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh }),
@@ -72,7 +72,7 @@ const ListEmployees = () => {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const result = await apiCall("https://admin.veggafresh.com/be/api/v1/employees/");
+      const result = await apiCall(`${process.env.REACT_APP_API_URL}/employees/`);
       const employees = result?.data || [];
       setData(employees);
       setFilteredData(employees);
@@ -87,7 +87,7 @@ const ListEmployees = () => {
     if (!confirmDelete) return;
 
     try {
-      await apiCall(`https://admin.veggafresh.com/be/api/v1/employees/${id}/`, "DELETE");
+      await apiCall(`${process.env.REACT_APP_API_URL}/employees/${id}/`, "DELETE");
       fetchEmployees();
     } catch (error) {
       console.error("Delete error:", error);

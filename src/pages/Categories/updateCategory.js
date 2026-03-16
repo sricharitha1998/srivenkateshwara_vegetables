@@ -22,7 +22,7 @@ const getUserData = () => JSON.parse(localStorage.getItem("user"));
 
 const refreshAccessToken = async () => {
   const userData = getUserData();
-  const response = await fetch("https://admin.veggafresh.com/be/api/v1/token/refresh/", {
+  const response = await fetch(`${process.env.REACT_APP_API_URL}/token/refresh/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh: userData?.refresh }),
@@ -79,7 +79,7 @@ const UpdateCategory = () => {
     const fetchCategory = async () => {
       try {
         const response = await fetchWithAuth(
-          `https://admin.veggafresh.com/be/api/v1/categories/${id}/`
+          `${process.env.REACT_APP_API_URL}/categories/${id}/`
         );
 
         if (!response.ok)

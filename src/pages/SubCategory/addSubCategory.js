@@ -68,7 +68,7 @@ const AddSubCategory = () => {
   };
 
   const getUpdatedTokens = async (refreshToken) => {
-    const response = await fetch("https://admin.veggafresh.com/be/api/v1/token/refresh/", {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/token/refresh/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh: refreshToken }),
@@ -111,7 +111,7 @@ const AddSubCategory = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetchWithAuth("https://admin.veggafresh.com/be/api/v1/categories/", {
+      const response = await fetchWithAuth(`${process.env.REACT_APP_API_URL}/categories/`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });

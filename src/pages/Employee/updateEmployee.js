@@ -51,7 +51,7 @@ const UpdateEmployee = () => {
   const fetchEmployeeDetails = async (employeeId) => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-      const response = await fetch(`https://admin.veggafresh.com/be/api/v1/employees/${employeeId}/`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/employees/${employeeId}/`, {
         headers: {
           Authorization: `Bearer ${user?.access}`,
         },
@@ -123,7 +123,7 @@ const UpdateEmployee = () => {
   };
 
   const getUpdatedTokens = async (refreshToken) => {
-    const response = await fetch("https://admin.veggafresh.com/be/api/v1/token/refresh/", {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/token/refresh/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh: refreshToken }),
@@ -136,7 +136,7 @@ const UpdateEmployee = () => {
 
   const sendUpdateRequest = (accessToken, requestBody) => {
     console.log("requestBody", requestBody)
-    return fetch(`https://admin.veggafresh.com/be/api/v1/employees/${id}/`, {
+    return fetch(`${process.env.REACT_APP_API_URL}/employees/${id}/`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${accessToken}`,

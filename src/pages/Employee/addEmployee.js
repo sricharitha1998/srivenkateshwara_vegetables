@@ -80,7 +80,7 @@ const AddEmployee = () => {
   };
 
   const getUpdatedTokens = async (refreshToken) => {
-    const response = await fetch("https://admin.veggafresh.com/be/api/v1/token/refresh/", {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/token/refresh/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh: refreshToken }),
@@ -92,7 +92,7 @@ const AddEmployee = () => {
   };
 
   const sendRequest = (accessToken, requestBody) => {
-    return fetch("https://admin.veggafresh.com/be/api/v1/employees/create/", {
+    return fetch(`${process.env.REACT_APP_API_URL}/employees/create/`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,

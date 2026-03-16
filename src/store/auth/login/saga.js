@@ -17,7 +17,7 @@ function* loginUser({ payload: { user, history } }) {
             yield put(loginUserSuccessful(response));
             history('/dashboard');
         } else {
-            const response = yield call(fetch, "https://admin.veggafresh.com/be/api/v1/login/", {
+            const response = yield call(fetch, `${process.env.REACT_APP_API_URL}/login/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username: user.username, password: user.password }),
