@@ -8,18 +8,76 @@ const SidebarContent = ({ t }) => {
   const location = useLocation();
   const [pathName, setPathName] = useState(location.pathname);
   const user = JSON.parse(localStorage.getItem("user"))?.user;
+  const [menuInitialized, setMenuInitialized] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      // Cleanup on component unmount
+      const menuElement = document.querySelector('#side-menu');
+      if (menuElement && menuElement._metismenu) {
+        menuElement._metismenu.dispose();
+      }
+    };
+  }, []);
+
   useEffect(() => {
     setPathName(location.pathname);
-    initMenu();
+    if (!menuInitialized) {
+      initMenu();
+      setMenuInitialized(true);
+    } else {
+      updateActiveMenu();
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [location.pathname]);
+  }, [location.pathname, menuInitialized]);
 
   const initMenu = () => {
-    new MetisMenu("#side-menu");
+    // Wait for DOM to be ready
+    setTimeout(() => {
+      try {
+        // Destroy existing instance if it exists
+        const existingMenu = document.querySelector('#side-menu');
+        if (existingMenu && existingMenu._metismenu) {
+          existingMenu._metismenu.dispose();
+        }
 
+        // Check if element exists
+        if (!document.querySelector('#side-menu')) {
+          console.warn('Sidebar menu element not found');
+          return;
+        }
+
+        // Initialize new MetisMenu instance
+        const menu = new MetisMenu("#side-menu", {
+          toggle: true,
+          activeClass: 'mm-active',
+          collapseClass: 'mm-collapse',
+          collapseInClass: 'mm-collapsing',
+          collapsingClass: 'mm-collapsing'
+        });
+
+        // Store reference for cleanup
+        document.querySelector('#side-menu')._metismenu = menu;
+
+        updateActiveMenu();
+      } catch (error) {
+        console.error('Error initializing sidebar menu:', error);
+      }
+    }, 100);
+  };
+
+  const updateActiveMenu = () => {
+    // Remove all active classes first
     const ul = document.getElementById("side-menu");
-    const items = ul.getElementsByTagName("a");
+    if (!ul) return;
 
+    const activeItems = ul.querySelectorAll('.mm-active, .active, .mm-show');
+    activeItems.forEach(item => {
+      item.classList.remove('mm-active', 'active', 'mm-show');
+    });
+
+    // Find and activate current menu item
+    const items = ul.getElementsByTagName("a");
     for (let i = 0; i < items.length; ++i) {
       if (pathName === items[i].pathname) {
         activateParentDropdown(items[i]);

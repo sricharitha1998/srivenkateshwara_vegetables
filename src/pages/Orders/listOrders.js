@@ -10,21 +10,21 @@ import { useDispatch } from "react-redux";
 
 const ListOrders = () => {
   const [modal, setModal] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState(null);
-  const [getID, setID] = useState(null);
+  const [orderDetailsModal, setOrderDetailsModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [deliveryInfo, setDeliveryInfo] = useState({ name: "", mobile: "", trackingLink: "" });
   const [data, setData] = useState([]);
   const [status, setStatus] = useState([]);
+  const [selectedFilter, setSelectedFilter] = useState("all");
   const dispatch = useDispatch();
   const [deliveryList, setDeliveryList] = useState([]);
   const [isAddMode, setIsAddMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const statusOptions = [
-    { label: "All", value: "1" },
-    { label: "Accepted", value: "2" },
-    { label: "Cancelled", value: "3" },
-    { label: "Assign to Delivery Partner", value: "4" },
-    { label: "Delivered", value: "5" },
+    { label: "All", value: "all" },
+    { label: "Pending", value: "Pending" },
+    { label: "Delivered", value: "Delivered" },
+    { label: "Cancelled", value: "Cancelled" },
   ];
   const [isNameInput, setIsNameInput] = useState(false);
   const [isMobileInput, setIsMobileInput] = useState(false);
@@ -108,13 +108,8 @@ const ListOrders = () => {
     }
   };
 
-  const handleStatusChange = (e, id) => {
-    const value = Number(e.target.value);
-    setSelectedStatus({ id, status: value });
-    setID(id);
-
-    if (value === 3) toggleModal();
-    else updateStatus({ status: value, }, id);
+  const handleOrderAction = async (actionStatus, id) => {
+    await updateStatus({ status: actionStatus }, id);
   };
 
   const handleDeliveryInputChange = (e) => {
@@ -123,7 +118,7 @@ const ListOrders = () => {
   };
 
   const sendRequest = (accessToken, requestBody, id) => {
-    return fetch(`${process.env.REACT_APP_API_URL}/orders/${id ? id : getID}/update-status/`, {
+    return fetch(`${process.env.REACT_APP_API_URL}/orders/${id}/update-status/`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -163,11 +158,11 @@ const ListOrders = () => {
         userData.access = accessToken;
         userData.refresh = newTokens.refresh;
         localStorage.setItem("user", JSON.stringify(userData));
-        response = await sendRequest(accessToken, requestBody);
+        response = await sendRequest(accessToken, requestBody, id);
       }
 
       if (response.ok) {
-        window.location.reload();
+        await fetchOrders(selectedFilter);
       } else {
         const errorData = await response.json();
         console.error("Error:", errorData);
@@ -261,23 +256,18 @@ const ListOrders = () => {
     return `${day}/${month}/${year}`;
   };
 
-  const fetchOrders = async (type) => {
+  const fetchOrders = async (type = "all") => {
     setLoading(true);
+    setSelectedFilter(type);
     try {
-      const userData = await JSON.parse(localStorage.getItem("user"));
-      const accessToken = await userData?.access;
-      let apiurl;
-      if (type === "1") {
-        apiurl = `${process.env.REACT_APP_API_URL}/orders/`
-      } else if (type === "2") {
-        apiurl = `${process.env.REACT_APP_API_URL}/orders/status/Accepted/`
-      } else if (type === "3") {
-        apiurl = `${process.env.REACT_APP_API_URL}/orders/status/Cancelled/`
-      } else if (type === "4") {
-        apiurl = `${process.env.REACT_APP_API_URL}/orders/status/Assigned to Delivery Partner/`
-      } else if (type === "5") {
-        apiurl = `${process.env.REACT_APP_API_URL}/orders/status/Delivered/`
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const accessToken = userData?.access;
+      let apiurl = `${process.env.REACT_APP_API_URL}/orders/`;
+
+      if (type && type !== "all") {
+        apiurl = `${process.env.REACT_APP_API_URL}/orders/status/${encodeURIComponent(type)}/`;
       }
+
       const response = await fetch(apiurl, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -301,9 +291,8 @@ const ListOrders = () => {
   const fetchStatus = async () => {
     setLoading(true);
     try {
-
-      const userData = await JSON.parse(localStorage.getItem("user"));
-      const accessToken = await userData?.access;
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const accessToken = userData?.access;
 
       const response = await fetch(`${process.env.REACT_APP_API_URL}/order-status/`, {
         headers: {
@@ -325,8 +314,18 @@ const ListOrders = () => {
     }
   };
 
+  const openOrderModal = (order) => {
+    setSelectedOrder(order);
+    setOrderDetailsModal(true);
+  };
+
+  const closeOrderModal = () => {
+    setSelectedOrder(null);
+    setOrderDetailsModal(false);
+  };
+
   useEffect(() => {
-    fetchOrders("1");
+    fetchOrders("all");
     fetchStatus();
   }, []);
 
@@ -335,6 +334,11 @@ const ListOrders = () => {
       name: "No.",
       cell: (row, index) => index + 1,
       width: "70px",
+    },
+    {
+      name: "Order ID",
+      selector: (row) => row.order_id,
+      sortable: true,
     },
     {
       name: "Date",
@@ -348,13 +352,18 @@ const ListOrders = () => {
       sortable: true,
     },
     {
+      name: "Payment Method",
+      selector: (row) => row.payment_method,
+      sortable: true,
+    },
+    {
       name: "Order Status",
       selector: (row) => row.status,
       sortable: true,
     },
     {
       name: "Payment Amount",
-      selector: (row) => row.payment_amount,
+      selector: (row) => row.final_amount || row.payment_amount,
       sortable: true,
     },
     {
@@ -363,40 +372,30 @@ const ListOrders = () => {
       sortable: true,
     },
     {
-      name: "Status",
+      name: "Actions",
       cell: (row) => (
-        <div className="d-flex align-items-center gap-2">
-          <select
-            className="form-select"
-            onChange={(e) => handleStatusChange(e, row?.id)}
-            value={selectedStatus?.id === row.id ? selectedStatus.status : ""}
-          >
-            <option value="">Select</option>
-            {status
-              .filter((item) => {
-                const userPermissions = JSON.parse(localStorage.getItem("user"))?.user;
-                switch (item.name) {
-                  case "Delivered":
-                    return userPermissions?.is_superadmin || userPermissions?.permissions?.can_update_delivery_status;
-                  case "Accepted":
-                    return userPermissions?.is_superadmin || userPermissions?.permissions?.can_accept_orders;
-                  default:
-                    return true;
-                }
-              })
-              .map((item, index) => (
-                <option key={index} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-          </select>
+        <div className="d-flex align-items-center gap-2 flex-wrap">
+          <Button size="sm" color="info" onClick={() => openOrderModal(row)}>
+            View
+          </Button>
+          {row.status === "Pending" && (
+            <>
+              <Button size="sm" color="success" onClick={() => handleOrderAction("Delivered", row.id)}>
+                Deliver
+              </Button>
+              <Button size="sm" color="danger" onClick={() => handleOrderAction("Cancelled", row.id)}>
+                Cancel
+              </Button>
+            </>
+          )}
         </div>
       ),
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
+      minWidth: "200px",
     },
-  ], [selectedStatus, status]);
+  ], [status]);
 
 
   const breadcrumbItems = [
@@ -417,7 +416,7 @@ const ListOrders = () => {
                   type="select"
                   name="statusFilter"
                   id="statusFilter"
-                  // value={statusFilter}
+                  value={selectedFilter}
                   onChange={(e) => fetchOrders(e.target.value)}
                 >
                   {statusOptions.map(option => (
@@ -501,6 +500,87 @@ const ListOrders = () => {
           </Card>
         </Container>
       </div>
+
+      <Modal isOpen={orderDetailsModal} toggle={closeOrderModal} size="lg">
+        <ModalHeader toggle={closeOrderModal}>Order Details</ModalHeader>
+        <ModalBody>
+          {selectedOrder && (
+            <>
+              <div className="mb-3">
+                <strong>Order ID:</strong> {selectedOrder.order_id}
+              </div>
+              <div className="mb-3">
+                <strong>Status:</strong> {selectedOrder.status}
+                <span className="ms-3">
+                  <strong>Payment Status:</strong> {selectedOrder.payment_status}
+                </span>
+              </div>
+              <div className="mb-3">
+                <strong>Payment Method:</strong> {selectedOrder.payment_method}
+              </div>
+              <div className="mb-3">
+                <strong>Final Amount:</strong> {selectedOrder.final_amount || selectedOrder.payment_amount}
+              </div>
+              <div className="mb-3">
+                <strong>Delivery Person:</strong> {selectedOrder.delivery_person || "Not assigned"}
+              </div>
+
+              <div className="mb-3">
+                <h5>Items</h5>
+                {selectedOrder.items?.length ? (
+                  <table className="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Product</th>
+                        <th>Variant</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Discounted</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedOrder.items.map((item, index) => (
+                        <tr key={item.id}>
+                          <td>{index + 1}</td>
+                          <td>{item.product_name}</td>
+                          <td>{item.product_variant}</td>
+                          <td>{item.quantity}</td>
+                          <td>{item.price}</td>
+                          <td>{item.discounted_price}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div>No items available</div>
+                )}
+              </div>
+
+              <div className="mb-3">
+                <h5>Shipping Address</h5>
+                {selectedOrder.address ? (
+                  <div>
+                    <div>{selectedOrder.address.full_name}</div>
+                    <div>{selectedOrder.address.mobile}</div>
+                    <div>{selectedOrder.address.address_line1}</div>
+                    {selectedOrder.address.address_line2 && <div>{selectedOrder.address.address_line2}</div>}
+                    <div>{selectedOrder.address.city}, {selectedOrder.address.state} - {selectedOrder.address.pincode}</div>
+                    <div>{selectedOrder.address.country}</div>
+                  </div>
+                ) : (
+                  <div>No address information</div>
+                )}
+              </div>
+            </>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={closeOrderModal}>
+            Close
+          </Button>
+        </ModalFooter>
+      </Modal>
 
       {/* Assign Delivery Modal */}
       <Modal isOpen={modal} toggle={toggleModal}>
