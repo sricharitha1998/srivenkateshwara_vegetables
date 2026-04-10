@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardBody, Container, Modal, Spinner, ModalHeader, ModalBody, ModalFooter, Button, Input, FormGroup, Label, Row, Col } from "reactstrap";
 import { Link } from "react-router-dom";
 import Select from "react-select";
@@ -20,12 +20,6 @@ const ListOrders = () => {
   const [deliveryList, setDeliveryList] = useState([]);
   const [isAddMode, setIsAddMode] = useState(false);
   const [loading, setLoading] = useState(false);
-  const statusOptions = [
-    { label: "All", value: "all" },
-    { label: "Pending", value: "Pending" },
-    { label: "Delivered", value: "Delivered" },
-    { label: "Cancelled", value: "Cancelled" },
-  ];
   const [isNameInput, setIsNameInput] = useState(false);
   const [isMobileInput, setIsMobileInput] = useState(false);
   const [filteredOptions, setFilteredOptions] = useState([]);
@@ -108,8 +102,8 @@ const ListOrders = () => {
     }
   };
 
-  const handleOrderAction = async (actionStatus, id) => {
-    await updateStatus({ status: actionStatus }, id);
+  const handleOrderAction = async (statusId, id) => {
+    await updateStatus({ status: Number(statusId) }, id);
   };
 
   const handleDeliveryInputChange = (e) => {
@@ -294,7 +288,7 @@ const ListOrders = () => {
       const userData = JSON.parse(localStorage.getItem("user"));
       const accessToken = userData?.access;
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/order-status/`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/order-statuses/`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
@@ -303,7 +297,14 @@ const ListOrders = () => {
 
       if (response.ok) {
         const result = await response.json();
-        setStatus(result?.data || []);
+        const statusData = result?.data?.status_options;
+        setStatus(
+          Array.isArray(statusData)
+            ? statusData
+            : statusData && typeof statusData === "object"
+            ? Object.values(statusData)
+            : []
+        );
       } else {
         throw new Error("Failed to fetch statuses");
       }
@@ -366,34 +367,40 @@ const ListOrders = () => {
       selector: (row) => row.final_amount || row.payment_amount,
       sortable: true,
     },
-    {
-      name: "Payment Status",
-      selector: (row) => row.payment_status,
-      sortable: true,
-    },
+    // {
+    //   name: "Payment Status",
+    //   selector: (row) => row.payment_status,
+    //   sortable: true,
+    // },
     {
       name: "Actions",
-      cell: (row) => (
-        <div className="d-flex align-items-center gap-2 flex-wrap">
-          <Button size="sm" color="info" onClick={() => openOrderModal(row)}>
-            View
-          </Button>
-          {row.status === "Pending" && (
-            <>
-              <Button size="sm" color="success" onClick={() => handleOrderAction("Delivered", row.id)}>
-                Deliver
-              </Button>
-              <Button size="sm" color="danger" onClick={() => handleOrderAction("Cancelled", row.id)}>
-                Cancel
-              </Button>
-            </>
-          )}
-        </div>
-      ),
+      cell: (row) => {
+        const currentStatus = status.find((statusItem) => statusItem.name === row.status);
+        return (
+          <div className="d-flex align-items-center gap-2 flex-wrap">
+            <Button size="sm" color="info" onClick={() => openOrderModal(row)}>
+              View
+            </Button>
+            <Input
+              type="select"
+              value={currentStatus?.id || ""}
+              onChange={(e) => handleOrderAction(e.target.value, row.id)}
+              style={{ width: 150 }}
+            >
+              <option value="">Change status</option>
+              {status?.map((statusItem) => (
+                <option key={statusItem.id} value={statusItem.id}>
+                  {statusItem.name}
+                </option>
+              ))}
+            </Input>
+          </div>
+        );
+      },
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
-      minWidth: "200px",
+      minWidth: "230px",
     },
   ], [status]);
 
@@ -412,17 +419,20 @@ const ListOrders = () => {
             <CardBody>
               <FormGroup className="mb-3" style={{ maxWidth: 300 }}>
                 <Label for="statusFilter">Filter by Status</Label>
-                <Input
-                  type="select"
-                  name="statusFilter"
-                  id="statusFilter"
-                  value={selectedFilter}
-                  onChange={(e) => fetchOrders(e.target.value)}
-                >
-                  {statusOptions.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </Input>
+                        <Input
+                type="select"
+                name="statusFilter"
+                id="statusFilter"
+                value={selectedFilter}
+                onChange={(e) => fetchOrders(e.target.value)}
+              >
+                <option value="all">All</option>
+                {Array.isArray(status) && status.map((statusItem) => (
+                  <option key={statusItem.id} value={statusItem.name}>
+                    {statusItem.name}
+                  </option>
+                ))}
+              </Input>
               </FormGroup>
 
 
