@@ -6,7 +6,6 @@ import { connect } from "react-redux";
 
 const SidebarContent = ({ t }) => {
   const location = useLocation();
-  const [pathName, setPathName] = useState(location.pathname);
   const user = JSON.parse(localStorage.getItem("user"))?.user;
   const [menuInitialized, setMenuInitialized] = useState(false);
 
@@ -20,16 +19,16 @@ const SidebarContent = ({ t }) => {
     };
   }, []);
 
-  useEffect(() => {
-    setPathName(location.pathname);
-    if (!menuInitialized) {
-      initMenu();
-      setMenuInitialized(true);
-    } else {
-      updateActiveMenu();
-    }
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [location.pathname, menuInitialized]);
+useEffect(() => {
+  if (!menuInitialized) {
+    initMenu();
+    setMenuInitialized(true);
+  } else {
+    updateActiveMenu();
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}, [location.pathname]);
 
   const initMenu = () => {
     // Wait for DOM to be ready
@@ -66,25 +65,36 @@ const SidebarContent = ({ t }) => {
     }, 100);
   };
 
-  const updateActiveMenu = () => {
-    // Remove all active classes first
-    const ul = document.getElementById("side-menu");
-    if (!ul) return;
+const updateActiveMenu = () => {
+  const ul = document.getElementById("side-menu");
+  if (!ul) return;
 
-    const activeItems = ul.querySelectorAll('.mm-active, .active, .mm-show');
-    activeItems.forEach(item => {
-      item.classList.remove('mm-active', 'active', 'mm-show');
-    });
+  const currentPath = location.pathname; // ✅ ALWAYS latest value
 
-    // Find and activate current menu item
-    const items = ul.getElementsByTagName("a");
-    for (let i = 0; i < items.length; ++i) {
-      if (pathName === items[i].pathname) {
-        activateParentDropdown(items[i]);
-        break;
-      }
+  // Remove all active classes
+  ul.querySelectorAll(".mm-active").forEach(el => el.classList.remove("mm-active"));
+  ul.querySelectorAll(".mm-show").forEach(el => el.classList.remove("mm-show"));
+  ul.querySelectorAll(".active").forEach(el => el.classList.remove("active"));
+
+  const links = ul.querySelectorAll("a[href]");
+
+  let activeLink = null;
+
+  links.forEach(link => {
+    const linkPath = link.pathname;
+
+    if (
+      linkPath === currentPath ||
+      (linkPath !== "/" && currentPath.startsWith(linkPath))
+    ) {
+      activeLink = link;
     }
-  };
+  });
+
+  if (activeLink) {
+    activateParentDropdown(activeLink);
+  }
+};
 
   const activateParentDropdown = (item) => {
     item.classList.add("active");
