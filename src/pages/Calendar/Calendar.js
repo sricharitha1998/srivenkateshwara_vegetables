@@ -295,7 +295,7 @@ class Calender extends Component {
                         Drag and drop your event or click in the calendar
                       </p>
                       {categories &&
-                        categories.map((category, i) => (
+                        categories?.map((category, i) => (
                           <div
                             key={i}
                             className={`${category.type} external-event fc-event text-white`}
@@ -355,7 +355,7 @@ class Calender extends Component {
                               <FormWrapper onSubmit={this.handleSubmit}>
                                 <Controller
                                   name="title"
-                                //   control={control}
+                                  //   control={control}
                                   rules={{ required: "Event name is required" }}
                                   defaultValue={
                                     this.state.event
@@ -366,9 +366,8 @@ class Calender extends Component {
                                     <input
                                       {...field}
                                       type="text"
-                                      className={`form-control ${
-                                        this.state.event.title ? "is-invalid" : ""
-                                      }`}
+                                      className={`form-control ${this.state.event.title ? "is-invalid" : ""
+                                        }`}
                                       placeholder="Event Name"
                                     />
                                   )}
@@ -395,7 +394,7 @@ class Calender extends Component {
                               <FormWrapper onSubmit={this.handleSubmit}>
                                 <Controller
                                   name="category"
-                                //   control={control}
+                                  //   control={control}
                                   defaultValue={
                                     this.state.event
                                       ? this.state.event.category
@@ -505,11 +504,10 @@ class Calender extends Component {
                                       <input
                                         {...field}
                                         type="text"
-                                        className={`form-control ${
-                                            this.state.title_category
+                                        className={`form-control ${this.state.title_category
                                             ? "is-invalid"
                                             : ""
-                                        }`}
+                                          }`}
                                         placeholder="Category Name"
                                       />
                                     )}

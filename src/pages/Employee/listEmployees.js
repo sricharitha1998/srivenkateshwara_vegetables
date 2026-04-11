@@ -73,7 +73,7 @@ const ListEmployees = () => {
     setLoading(true);
     try {
       const result = await apiCall(`${process.env.REACT_APP_API_URL}/employees/`);
-      const employees = result?.data || [];
+      const employees = Array.isArray(result?.data?.results) ? result.data?.results : (Array.isArray(result?.data?.data) ? result?.data?.data : []);
       setData(employees);
       setFilteredData(employees);
     } catch (error) {

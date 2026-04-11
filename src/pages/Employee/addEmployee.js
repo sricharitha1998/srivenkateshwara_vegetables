@@ -257,34 +257,29 @@ const AddEmployee = () => {
 
                     <div className="mb-3">
                       <Label htmlFor="password">Password</Label>
-                      {/* <Input
-                        id="password"
-                        name="password"
-                        type="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                      /> */}
-                      <Input
-                        id="password"
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                      />
-                      <FontAwesomeIcon
-                        icon={showPassword ? faEyeSlash : faEye}
-                        onClick={() => setShowPassword(!showPassword)}
-                        style={{
-                          position: "absolute",
-                          top: "50%",
-                          right: "15px",
-                          transform: "translateY(-50%)",
-                          cursor: "pointer",
-                          color: "#888"
-                        }}
-                      />
+                      <div className="position-relative">
+                        <Input
+                          id="password"
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          value={formData.password}
+                          onChange={handleChange}
+                          required
+                        />
+                        <FontAwesomeIcon
+                          icon={showPassword ? faEyeSlash : faEye}
+                          onClick={() => setShowPassword(!showPassword)}
+                          style={{
+                            position: "absolute",
+                            top: "50%",
+                            right: "15px",
+                            transform: "translateY(-50%)",
+                            cursor: "pointer",
+                            color: "#888",
+                            zIndex: 10
+                          }}
+                        />
+                      </div>
                     </div>
 
                     <div className="mb-3">

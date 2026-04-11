@@ -14,6 +14,7 @@ import {
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import Select from "react-select";
+import { customSelectStyles } from "../../helpers/customStyles";
 import Dropzone from "react-dropzone";
 import Breadcrumb from "../../components/Common/Breadcrumb";
 import { useNavigate, useParams } from "react-router-dom";
@@ -77,7 +78,8 @@ const AddProduct = () => {
           headers: { Authorization: `Bearer ${userData?.access}` },
         });
         const result = await response.json();
-        const formatted = (result?.data || []).map((cat) => ({
+        const items = Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : (Array.isArray(result?.data) ? result.data : []));
+        const formatted = items.map((cat) => ({
           value: cat.id,
           label: cat.name,
           subcategories: cat.subcategories || [],
@@ -190,8 +192,15 @@ const AddProduct = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // In Update Mode, the backend might only want NEW images or a specific merging logic.
-    // For standard multipart/form-data ADD/UPDATE, we typically send NEW files.
+    // Validate if any variant is incomplete
+    for (let i = 0; i < variants.length; i++) {
+      const v = variants[i];
+      if (!v.quantity || !v.unit || !v.price || !v.stock) {
+        alert(`Please complete Quantity, Unit, Price, and Stock for Variant ${i + 1}.`);
+        return;
+      }
+    }
+
     const newFiles = selectedFiles.filter(f => !f.isExisting);
 
     const payload = {
@@ -209,36 +218,7 @@ const AddProduct = () => {
     }
   };
 
-  const customSelectStyles = {
-  control: (provided, state) => ({
-    ...provided,
-    minHeight: "38px",
-    height: "38px",
-    border: "1px solid #ced4da",
-    borderRadius: "0.375rem",
-    boxShadow: state.isFocused ? "0 0 0 0.2rem rgba(13,110,253,.25)" : "none",
-    "&:hover": {
-      borderColor: "#86b7fe",
-    },
-  }),
-  valueContainer: (provided) => ({
-    ...provided,
-    height: "38px",
-    padding: "0 8px",
-  }),
-  input: (provided) => ({
-    ...provided,
-    margin: "0px",
-  }),
-  indicatorsContainer: (provided) => ({
-    ...provided,
-    height: "38px",
-  }),
-  placeholder: (provided) => ({
-    ...provided,
-    color: "#6c757d",
-  }),
-};
+
 
   return (
     <div className="page-content">
@@ -261,7 +241,7 @@ const AddProduct = () => {
                     </Col>
                     <Col md={6} className="mb-3">
                       <Label>Brand</Label>
-                      <Input name="brand" value={productData.brand} onChange={handleInputChange} />
+                      <Input name="brand" value={productData.brand} onChange={handleInputChange} required />
                     </Col>
                     <Col md={6} className="mb-3">
                       <Label>Category</Label>
@@ -272,6 +252,7 @@ const AddProduct = () => {
                         placeholder="Select Category..."
                         isClearable
                           styles={customSelectStyles}
+                          required
                       />
                     </Col>
                     <Col md={6} className="mb-3">
@@ -285,6 +266,7 @@ const AddProduct = () => {
                         placeholder="Select Subcategory..."
                         isDisabled={subcategories.length === 0}
                         isClearable
+                        required
                       />
                     </Col>
                     <Col md={12} className="mb-4">
@@ -309,6 +291,7 @@ const AddProduct = () => {
                           name="quantity"
                           value={variant.quantity}
                           onChange={(e) => handleVariantChange(index, e)}
+                          required
                         />
                       </Col>
                       <Col md={2}>
@@ -333,6 +316,7 @@ const AddProduct = () => {
                           name="price"
                           value={variant.price}
                           onChange={(e) => handleVariantChange(index, e)}
+                          required
                         />
                       </Col>
                       <Col md={2}>
@@ -351,6 +335,7 @@ const AddProduct = () => {
                           name="stock"
                           value={variant.stock}
                           onChange={(e) => handleVariantChange(index, e)}
+                          required
                         />
                       </Col>
                       <Col md={1} className="d-flex align-items-center mt-4">

@@ -10,6 +10,7 @@ const ListPayments = () => {
   const [data, setData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
   const [loading, setLoading] = useState(false);  // Loading state
 
   const breadcrumbItems = [
@@ -29,8 +30,9 @@ const ListPayments = () => {
         item?.payment_id?.toLowerCase().includes(value?.toLowerCase())
       );
       setData(getvalues);
+      setTotalRows(getvalues.length);
     } else {
-      fetchCategories();
+      fetchCategories(currentPage, perPage);
     }
   };
 
@@ -69,17 +71,20 @@ const ListPayments = () => {
     return response;
   };
 
-  const fetchCategories = async () => {
-    setLoading(true); 
+  const fetchCategories = async (page = currentPage, limit = perPage) => {
+    setLoading(true);
     try {
-      const response = await makeAuthenticatedRequest(`${API_BASE}/payments/`);
+      const response = await makeAuthenticatedRequest(`${API_BASE}/payments/?page_no=${page}&page_size=${limit}`);
       if (!response.ok) throw new Error(`Fetch failed with status ${response.status}`);
       const result = await response.json();
-      setData(result?.data || []);
+      const items = Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : (Array.isArray(result?.data) ? result.data : []));
+      const count = result?.data?.count ?? result?.count ?? result?.data?.total ?? result?.total ?? result?.data?.total_rows ?? items.length;
+      setData(items);
+      setTotalRows(count);
     } catch (err) {
       console.error("Error fetching categories:", err.message);
     } finally {
-      setLoading(false);  
+      setLoading(false);
     }
   };
 
@@ -129,9 +134,9 @@ const ListPayments = () => {
   }, [data.length, currentPage, perPage]);
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
-console.log("data", data)
+    fetchCategories(currentPage, perPage);
+  }, [currentPage, perPage]);
+  console.log("data", data)
   return (
     <div className="page-content">
       <Container fluid>
@@ -153,27 +158,27 @@ console.log("data", data)
                   />
                 </div>
 
-                {loading ? (
-                  <div className="text-center">
-                    <Spinner color="primary" />
-                  </div>
-                ) : (
-                  <DataTable
-                    columns={columns}
-                    data={data}
-                    pagination
-                    responsive
-                    highlightOnHover
-                    striped
-                    persistTableHead
-                    defaultSortField="name"
-                    onChangePage={(page) => setCurrentPage(page)}
-                    onChangeRowsPerPage={(newPerPage, page) => {
-                      setPerPage(newPerPage);
-                      setCurrentPage(page);
-                    }}
-                  />
-                )}
+                {/* Data Table handles own loading state */}
+                <DataTable
+                  columns={columns}
+                  data={data}
+                  pagination
+                  paginationServer
+                  paginationTotalRows={totalRows}
+                  paginationPerPage={perPage}
+                  progressPending={loading}
+                  progressComponent={<div className="my-3 text-center"><Spinner color="primary" /></div>}
+                  responsive
+                  highlightOnHover
+                  striped
+                  persistTableHead
+                  defaultSortField="name"
+                  onChangePage={(page) => setCurrentPage(page)}
+                  onChangeRowsPerPage={(newPerPage, page) => {
+                    setPerPage(newPerPage);
+                    setCurrentPage(page);
+                  }}
+                />
               </CardBody>
             </Card>
           </Col>

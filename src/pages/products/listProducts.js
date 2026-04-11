@@ -18,6 +18,9 @@ import DataTable from "react-data-table-component";
 const ListProducts = () => {
   const API_BASE = process.env.REACT_APP_API_URL;
   const [data, setData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -71,13 +74,16 @@ const ListProducts = () => {
     return response;
   };
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (page = currentPage, limit = perPage) => {
     setLoading(true);
     try {
-      const response = await makeAuthenticatedRequest(`${API_BASE}/products/`);
+      const response = await makeAuthenticatedRequest(`${API_BASE}/products/?page_no=${page}&page_size=${limit}`);
       if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
       const result = await response.json();
-      setData(result?.data || []);
+      const items = Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : (Array.isArray(result?.data) ? result.data : []));
+      const count = result?.data?.count ?? result?.count ?? result?.data?.total ?? result?.total ?? result?.data?.total_rows ?? items.length;
+      setData(items);
+      setTotalRows(count);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
@@ -142,7 +148,7 @@ const ListProducts = () => {
   };
 
   const filteredData = useMemo(() => {
-    return data.filter(item => 
+    return data.filter(item =>
       item.name.toLowerCase().includes(searchText.toLowerCase())
     );
   }, [data, searchText]);
@@ -150,7 +156,7 @@ const ListProducts = () => {
   const columns = useMemo(() => [
     {
       name: "No.",
-      cell: (row, index) => index + 1,
+      cell: (row, index) => (currentPage - 1) * perPage + (index + 1),
       width: "80px",
     },
     {
@@ -191,8 +197,8 @@ const ListProducts = () => {
   ].filter(Boolean), [canEdit, canDelete, openProductModal]);
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    fetchProducts(currentPage, perPage);
+  }, [currentPage, perPage]);
 
   return (
     <div className="page-content">
@@ -221,21 +227,25 @@ const ListProducts = () => {
                   />
                 </div>
 
-                {loading ? (
-                  <div className="text-center py-5">
-                    <Spinner color="primary" />
-                  </div>
-                ) : (
-                  <DataTable
-                    columns={columns}
-                    data={filteredData}
-                    pagination
-                    highlightOnHover
-                    striped
-                    responsive
-                    paginationPerPage={10}
-                  />
-                )}
+                {/* Data Table handles own loading state */}
+                <DataTable
+                  columns={columns}
+                  data={filteredData}
+                  pagination
+                  paginationServer
+                  paginationTotalRows={totalRows}
+                  paginationPerPage={perPage}
+                  progressPending={loading}
+                  progressComponent={<div className="my-3 text-center"><Spinner color="primary" /></div>}
+                  onChangePage={(page) => setCurrentPage(page)}
+                  onChangeRowsPerPage={(newPerPage, page) => {
+                    setPerPage(newPerPage);
+                    setCurrentPage(page);
+                  }}
+                  highlightOnHover
+                  striped
+                  responsive
+                />
               </CardBody>
             </Card>
           </Col>

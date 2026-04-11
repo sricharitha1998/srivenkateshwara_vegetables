@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardBody, Container, Modal, Spinner, ModalHeader, ModalBody, ModalFooter, Button, Input, FormGroup, Label, Row, Col } from "reactstrap";
 import { Link } from "react-router-dom";
 import Select from "react-select";
+import { customSelectStyles } from "../../helpers/customStyles";
 import TableContainer from "../../components/Common/TableContainer";
 import Breadcrumbs from '../../components/Common/Breadcrumb';
 import DataTable from "react-data-table-component";
@@ -14,6 +15,10 @@ const ListOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [deliveryInfo, setDeliveryInfo] = useState({ name: "", mobile: "", trackingLink: "" });
   const [data, setData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
   const [status, setStatus] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState("all");
   const dispatch = useDispatch();
@@ -38,14 +43,14 @@ const ListOrders = () => {
       // console.log("accessToken", accessToken)
       // await dispatch(DeliveryPartnersApi(accessToken, dispatch));
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/delivery-persons/`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/delivery-persons/?page_no=1&page_size=100`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
       });
       const result = await response.json();
-      setDeliveryList(result?.data || []);
+      setDeliveryList(Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : []));
     } catch (err) {
       console.error("Error fetching delivery persons:", err);
     }
@@ -75,14 +80,16 @@ const ListOrders = () => {
     }));
   };
 
-  const handleSearch = async () => {
+  const handleSearch = async (page = 1, limit = perPage) => {
     setLoading(true);
+    setIsSearching(true);
+    if (page === 1 && currentPage !== 1) setCurrentPage(1);
     try {
 
       const userData = JSON.parse(localStorage.getItem("user"));
       const accessToken = userData?.access;
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/orders-filters?user_email=${filters?.emailSearch}&order_date_from=${filters?.fromDate}&order_date_to=${filters?.toDate}&order_id=${filters?.searchOrderID}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/orders-filters?user_email=${filters?.emailSearch}&order_date_from=${filters?.fromDate}&order_date_to=${filters?.toDate}&order_id=${filters?.searchOrderID}&page_no=${page}&page_size=${limit}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
@@ -91,7 +98,10 @@ const ListOrders = () => {
 
       if (response.ok) {
         const result = await response.json();
-        setData(result?.data || []);
+        const items = Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : (Array.isArray(result?.data) ? result.data : []));
+        const count = result?.data?.count ?? result?.count ?? result?.data?.total ?? result?.total ?? result?.data?.total_rows ?? items.length;
+        setData(items);
+        setTotalRows(count);
       } else {
         throw new Error("Failed to fetch statuses");
       }
@@ -156,7 +166,11 @@ const ListOrders = () => {
       }
 
       if (response.ok) {
-        await fetchOrders(selectedFilter);
+        if (isSearching) {
+          await handleSearch(currentPage, perPage);
+        } else {
+          await fetchOrders(selectedFilter, currentPage, perPage);
+        }
       } else {
         const errorData = await response.json();
         console.error("Error:", errorData);
@@ -250,16 +264,17 @@ const ListOrders = () => {
     return `${day}/${month}/${year}`;
   };
 
-  const fetchOrders = async (type = "all") => {
+  const fetchOrders = async (type = selectedFilter, page = currentPage, limit = perPage) => {
     setLoading(true);
     setSelectedFilter(type);
+    if (type !== selectedFilter || page === 1) setIsSearching(false);
     try {
       const userData = JSON.parse(localStorage.getItem("user"));
       const accessToken = userData?.access;
-      let apiurl = `${process.env.REACT_APP_API_URL}/orders/`;
+      let apiurl = `${process.env.REACT_APP_API_URL}/orders/?page_no=${page}&page_size=${limit}`;
 
       if (type && type !== "all") {
-        apiurl = `${process.env.REACT_APP_API_URL}/orders/status/${encodeURIComponent(type)}/`;
+        apiurl = `${process.env.REACT_APP_API_URL}/orders/status/${encodeURIComponent(type)}/?page_no=${page}&page_size=${limit}`;
       }
 
       const response = await fetch(apiurl, {
@@ -271,7 +286,10 @@ const ListOrders = () => {
 
       if (response.ok) {
         const result = await response.json();
-        setData(result?.data || []);
+        const items = Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : (Array.isArray(result?.data) ? result.data : []));
+        const count = result?.data?.count ?? result?.count ?? result?.data?.total ?? result?.total ?? result?.data?.total_rows ?? items.length;
+        setData(items);
+        setTotalRows(count);
       } else {
         throw new Error("Failed to fetch orders");
       }
@@ -302,8 +320,8 @@ const ListOrders = () => {
           Array.isArray(statusData)
             ? statusData
             : statusData && typeof statusData === "object"
-            ? Object.values(statusData)
-            : []
+              ? Object.values(statusData)
+              : []
         );
       } else {
         throw new Error("Failed to fetch statuses");
@@ -326,14 +344,21 @@ const ListOrders = () => {
   };
 
   useEffect(() => {
-    fetchOrders("all");
+    if (isSearching) {
+      handleSearch(currentPage, perPage);
+    } else {
+      fetchOrders(selectedFilter, currentPage, perPage);
+    }
+  }, [currentPage, perPage]);
+
+  useEffect(() => {
     fetchStatus();
   }, []);
 
   const columns = useMemo(() => [
     {
       name: "No.",
-      cell: (row, index) => index + 1,
+      cell: (row, index) => (currentPage - 1) * perPage + (index + 1),
       width: "70px",
     },
     {
@@ -419,20 +444,20 @@ const ListOrders = () => {
             <CardBody>
               <FormGroup className="mb-3" style={{ maxWidth: 300 }}>
                 <Label for="statusFilter">Filter by Status</Label>
-                        <Input
-                type="select"
-                name="statusFilter"
-                id="statusFilter"
-                value={selectedFilter}
-                onChange={(e) => fetchOrders(e.target.value)}
-              >
-                <option value="all">All</option>
-                {Array.isArray(status) && status.map((statusItem) => (
-                  <option key={statusItem.id} value={statusItem.name}>
-                    {statusItem.name}
-                  </option>
-                ))}
-              </Input>
+                <Input
+                  type="select"
+                  name="statusFilter"
+                  id="statusFilter"
+                  value={selectedFilter}
+                  onChange={(e) => fetchOrders(e.target.value)}
+                >
+                  <option value="all">All</option>
+                  {Array.isArray(status) && status.map((statusItem) => (
+                    <option key={statusItem.id} value={statusItem.name}>
+                      {statusItem.name}
+                    </option>
+                  ))}
+                </Input>
               </FormGroup>
 
 
@@ -491,21 +516,25 @@ const ListOrders = () => {
               </FormGroup>
 
 
-              {loading ? (
-                <div className="text-center py-5">
-                  <Spinner color="primary" />
-                </div>
-              ) : (
-                <DataTable
-                  columns={columns}
-                  data={data}
-                  pagination
-                  highlightOnHover
-                  striped
-                  responsive
-                  paginationPerPage={10}
-                />
-              )}
+              {/* Data Table handles own loading state */}
+              <DataTable
+                columns={columns}
+                data={data}
+                pagination
+                paginationServer
+                paginationTotalRows={totalRows}
+                paginationPerPage={perPage}
+                progressPending={loading}
+                progressComponent={<div className="my-3 text-center"><Spinner color="primary" /></div>}
+                onChangePage={(page) => setCurrentPage(page)}
+                onChangeRowsPerPage={(newPerPage, page) => {
+                  setPerPage(newPerPage);
+                  setCurrentPage(page);
+                }}
+                highlightOnHover
+                striped
+                responsive
+              />
             </CardBody>
           </Card>
         </Container>
@@ -634,6 +663,7 @@ const ListOrders = () => {
                   />
                 ) : (
                   <Select
+                    styles={customSelectStyles}
                     options={deliveryList.map(d => ({ label: d.name, value: d.id }))}
                     onInputChange={(inputValue) => {
                       const filtered = deliveryList.filter(d =>
@@ -689,6 +719,7 @@ const ListOrders = () => {
                   />
                 ) : (
                   <Select
+                    styles={customSelectStyles}
                     options={deliveryList.map(d => ({ label: d.mobile, value: d.id }))}
                     value={deliveryList
                       .map((person) => ({

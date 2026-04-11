@@ -7,6 +7,7 @@ import {
 import Dropzone from "react-dropzone";
 import classnames from "classnames";
 import Select from "react-select";
+import { customSelectStyles } from "../../helpers/customStyles";
 import { useParams } from "react-router-dom";
 import Breadcrumb from "../../components/Common/Breadcrumb";
 import { CKEditor } from '@ckeditor/ckeditor5-react';
@@ -23,12 +24,12 @@ const EditProduct = () => {
     { title: "Edit Product", link: "#" },
   ];
   const unitOptions = [
-  { label: "Kilogram (kg)", value: "kg" },
-  { label: "Gram (g)", value: "g" },
-  { label: "Liter (l)", value: "l" },
-  { label: "Milliliter (ml)", value: "ml" },
-  { label: "Piece (pc)", value: "pc" },
-];
+    { label: "Kilogram (kg)", value: "kg" },
+    { label: "Gram (g)", value: "g" },
+    { label: "Liter (l)", value: "l" },
+    { label: "Milliliter (ml)", value: "ml" },
+    { label: "Piece (pc)", value: "pc" },
+  ];
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [formValues, setFormValues] = useState({
     name: "",
@@ -84,7 +85,8 @@ const EditProduct = () => {
         },
       });
       const result = await res.json();
-      setCategories(result?.data || []);
+      const items = Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : (Array.isArray(result?.data) ? result.data : []));
+      setCategories(items);
     } catch (err) {
       console.error("Error fetching categories:", err);
     }
@@ -141,36 +143,7 @@ const EditProduct = () => {
     setVariants(updated);
   };
 
-  const customSelectStyles = {
-  control: (provided, state) => ({
-    ...provided,
-    minHeight: "38px",
-    height: "38px",
-    border: "1px solid #ced4da",
-    borderRadius: "0.375rem",
-    boxShadow: state.isFocused ? "0 0 0 0.2rem rgba(13,110,253,.25)" : "none",
-    "&:hover": {
-      borderColor: "#86b7fe",
-    },
-  }),
-  valueContainer: (provided) => ({
-    ...provided,
-    height: "38px",
-    padding: "0 8px",
-  }),
-  input: (provided) => ({
-    ...provided,
-    margin: "0px",
-  }),
-  indicatorsContainer: (provided) => ({
-    ...provided,
-    height: "38px",
-  }),
-  placeholder: (provided) => ({
-    ...provided,
-    color: "#6c757d",
-  }),
-};
+
 
   const addVariant = () => {
     setVariants([
@@ -213,6 +186,15 @@ const EditProduct = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Validate if any variant is incomplete
+    for (let i = 0; i < variants.length; i++) {
+      const v = variants[i];
+      if (!v.quantity || !v.unit || !v.price || !v.stock) {
+        alert(`Please complete Quantity, Unit, Price, and Stock for Variant ${i + 1}.`);
+        return;
+      }
+    }
 
     const plainData = {
       name: formValues.name,
@@ -261,6 +243,7 @@ const EditProduct = () => {
                         name="brand"
                         value={formValues.brand}
                         onChange={handleInputChange}
+                        required
                       />
                     </Col>
                   </Row>
@@ -282,12 +265,13 @@ const EditProduct = () => {
                           setFormValues({ ...formValues, category: selected.value, subcategory: "" });
                           setSubcategories(cat?.subcategories || []);
                         }}
-                        options={categories.map((cat) => ({
+                        options={categories?.map((cat) => ({
                           value: cat.id,
                           label: cat.name,
                         }))}
                         placeholder="Select Category"
                         isSearchable
+                        required
                       />
 
                     </Col>
@@ -305,13 +289,14 @@ const EditProduct = () => {
                         onChange={(selected) =>
                           setFormValues({ ...formValues, subcategory: selected?.value || "" })
                         }
-                        options={subcategories.map((sub) => ({
+                        options={subcategories?.map((sub) => ({
                           value: sub.id,
                           label: sub.name,
                         }))}
                         placeholder="Select Subcategory"
                         isSearchable
                         isDisabled={!formValues.category}
+                        required
                       />
 
                     </Col>
@@ -343,22 +328,23 @@ const EditProduct = () => {
                           name="quantity"
                           value={variant.quantity}
                           onChange={(e) => handleVariantChange(index, e)}
+                          required
                         />
                       </Col>
                       <Col md={2}>
                         <Label>Unit</Label>
                         <Select
-                        styles={customSelectStyles}
-  options={unitOptions}
-  value={unitOptions.find(opt => opt.value === variant.unit) || null}
-  onChange={(selected) => {
-    const updated = [...variants];
-    updated[index].unit = selected?.value || "";
-    setVariants(updated);
-  }}
-  placeholder="Select Unit"
-  isClearable
-/>
+                          styles={customSelectStyles}
+                          options={unitOptions}
+                          value={unitOptions.find(opt => opt.value === variant.unit) || null}
+                          onChange={(selected) => {
+                            const updated = [...variants];
+                            updated[index].unit = selected?.value || "";
+                            setVariants(updated);
+                          }}
+                          placeholder="Select Unit"
+                          isClearable
+                        />
                       </Col>
                       <Col md={2}>
                         <Label>Price</Label>
@@ -367,6 +353,7 @@ const EditProduct = () => {
                           name="price"
                           value={variant.price}
                           onChange={(e) => handleVariantChange(index, e)}
+                          required
                         />
                       </Col>
                       <Col md={2}>
@@ -385,6 +372,7 @@ const EditProduct = () => {
                           name="stock"
                           value={variant.stock}
                           onChange={(e) => handleVariantChange(index, e)}
+                          required
                         />
                       </Col>
                       <Col md={1}>

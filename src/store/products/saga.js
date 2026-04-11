@@ -23,62 +23,62 @@ const refreshAccessToken = async (refreshToken) => {
 };
 
 function* addProduct({ payload: { productData, navigate } }) {
-        const formDataBody = new FormData();
-        formDataBody.append("name", productData.name);
-        formDataBody.append("category", productData.category);
-        if (productData.description) formDataBody.append("description", productData.description);
-        if (productData.brand) formDataBody.append("brand", productData.brand);
-        if (productData.subcategory) formDataBody.append("subcategory", productData.subcategory);
+    const formDataBody = new FormData();
+    formDataBody.append("name", productData.name);
+    formDataBody.append("category", productData.category);
+    if (productData.description) formDataBody.append("description", productData.description);
+    if (productData.brand) formDataBody.append("brand", productData.brand);
+    if (productData.subcategory) formDataBody.append("subcategory", productData.subcategory);
 
-        if (productData.variants) {
-            formDataBody.append("variants", JSON.stringify(productData.variants));
-        }
+    if (productData.variants) {
+        formDataBody.append("variants", JSON.stringify(productData.variants));
+    }
 
-        if (productData.images && productData.images.length > 0) {
-            productData.images.forEach((file, index) => {
-                // Ensure we are appending the actual File object
-                const fileToAppend = file.originFileObj || file;
-                console.log(`Saga addProduct - Appending image ${index}:`, fileToAppend);
-                formDataBody.append("images", fileToAppend, fileToAppend.name || `product_image_${index}.png`);
-            });
-        }
+    if (productData.images && productData.images.length > 0) {
+        productData.images.forEach((file, index) => {
+            // Ensure we are appending the actual File object
+            const fileToAppend = file.originFileObj || file;
+            console.log(`Saga addProduct - Appending image ${index}:`, fileToAppend);
+            formDataBody.append("images", fileToAppend, fileToAppend.name || `product_image_${index}.png`);
+        });
+    }
 
-        // Debug: Log all FormData entries
-        console.log("Saga addProduct - Final FormData contents:");
-        for (let [key, value] of formDataBody.entries()) {
-            console.log(`${key}:`, value);
-        }
+    // Debug: Log all FormData entries
+    console.log("Saga addProduct - Final FormData contents:");
+    for (let [key, value] of formDataBody.entries()) {
+        console.log(`${key}:`, value);
+    }
 
-        const userDataStr = localStorage.getItem("user");
-        if (!userDataStr) throw new Error("No authentication data found.");
-        const userData = JSON.parse(userDataStr);
-        let access = userData.access;
+    const userDataStr = localStorage.getItem("user");
+    if (!userDataStr) throw new Error("No authentication data found.");
+    const userData = JSON.parse(userDataStr);
+    let access = userData.access;
 
-        let responseData;
+    let responseData;
 
-        try {
-            const response = yield call(axios.post, `${API_BASE}/products/`, formDataBody, {
+    try {
+        const response = yield call(axios.post, `${API_BASE}/products/`, formDataBody, {
+            headers: {
+                Authorization: `Bearer ${access}`
+            }
+        });
+        responseData = response.data;
+    } catch (error) {
+        if (error.response && error.response.status === 401) {
+            access = yield call(refreshAccessToken, userData.refresh);
+            const retryResponse = yield call(axios.post, `${API_BASE}/products/`, formDataBody, {
                 headers: {
                     Authorization: `Bearer ${access}`
                 }
             });
-            responseData = response.data;
-        } catch (error) {
-            if (error.response && error.response.status === 401) {
-                access = yield call(refreshAccessToken, userData.refresh);
-                const retryResponse = yield call(axios.post, `${API_BASE}/products/`, formDataBody, {
-                    headers: {
-                        Authorization: `Bearer ${access}`
-                    }
-                });
-                responseData = retryResponse.data;
-            } else {
-                throw error;
-            }
+            responseData = retryResponse.data;
+        } else {
+            throw error;
         }
+    }
 
-        yield put(addProductSuccess(responseData));
-        if (navigate) navigate("/list-products");
+    yield put(addProductSuccess(responseData));
+    if (navigate) navigate("/list-products");
 
     // } catch (error) {
     //     yield put(addProductFail(error.response?.data?.message || error.message || "Failed to add product"));
@@ -148,9 +148,7 @@ function* updateProduct({ payload: { id, productData, navigate } }) {
         }
 
         yield put(updateProductSuccess(responseData));
-        alert("Product updated successfully!");
-        // Keep user on the edit page as was done before, or navigate if you prefer.
-        // if (navigate) navigate("/list-products");
+        if (navigate) navigate("/list-products");
 
     } catch (error) {
         alert("Failed to update product.");

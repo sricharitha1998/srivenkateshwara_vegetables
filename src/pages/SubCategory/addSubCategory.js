@@ -11,6 +11,7 @@ import {
   Form,
 } from "reactstrap";
 import Select from "react-select";
+import { customSelectStyles } from "../../helpers/customStyles";
 import { useNavigate } from "react-router-dom";
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 import { useDispatch, useSelector } from "react-redux";
@@ -118,7 +119,8 @@ const AddSubCategory = () => {
 
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       const result = await response.json();
-      setCategories(result?.data || []);
+      const items = Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : (Array.isArray(result?.data) ? result.data : []));
+      setCategories(items);
     } catch (error) {
       console.error("Error fetching categories:", error);
       alert("Failed to load categories.");
@@ -143,9 +145,11 @@ const AddSubCategory = () => {
                       <div className="mb-3">
                         <Label htmlFor="categoryType">Category Type</Label>
                         <Select
+                        required
                           id="categoryType"
                           name="categoryType"
-                          options={categories.map((item) => ({
+                          styles={customSelectStyles}
+                          options={categories?.map((item) => ({
                             value: item.id,
                             label: item.name,
                           }))}
@@ -185,6 +189,7 @@ const AddSubCategory = () => {
                       <div className="mb-3">
                         <Label htmlFor="image">Sub Category Image</Label>
                         <Input
+                        required
                           id="image"
                           name="image"
                           type="file"

@@ -8,6 +8,9 @@ const API_BASE = process.env.REACT_APP_API_URL;
 
 const ListSubCategories = () => {
   const [data, setData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
   const [pending, setPending] = useState(true);
   const [searchText, setSearchText] = useState("");
 
@@ -62,13 +65,16 @@ const ListSubCategories = () => {
     return response;
   };
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (page = currentPage, limit = perPage) => {
     setPending(true);
     try {
-      const response = await makeAuthenticatedRequest(`${API_BASE}/subcategories/`);
+      const response = await makeAuthenticatedRequest(`${API_BASE}/subcategories/?page_no=${page}&page_size=${limit}`);
       if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
       const result = await response.json();
-      setData(result?.data || []);
+      const items = Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : (Array.isArray(result?.data) ? result.data : []));
+      const count = result?.data?.count ?? result?.count ?? result?.data?.total ?? result?.total ?? result?.data?.total_rows ?? items.length;
+      setData(items);
+      setTotalRows(count);
     } catch (err) {
       console.error("Error fetching categories:", err.message);
     } finally {
@@ -105,7 +111,7 @@ const ListSubCategories = () => {
       {
         name: "No.",
         selector: (row, index) => index + 1,
-        cell: (row, index, column, id) => <>{index + 1}</>,
+        cell: (row, index, column, id) => <>{(currentPage - 1) * perPage + (index + 1)}</>,
         width: "70px",
       },
       {
@@ -148,8 +154,8 @@ const ListSubCategories = () => {
   }, [canEdit, canDelete]);
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    fetchCategories(currentPage, perPage);
+  }, [currentPage, perPage]);
 
   return (
     <div className="page-content">
@@ -160,13 +166,13 @@ const ListSubCategories = () => {
             <Card>
               <CardBody>
                 <div className="d-flex justify-content-between align-items-center mb-2">
-                                  <h4 className="mb-0">Sub Categories</h4>
-                                  {canAdd && (
+                  <h4 className="mb-0">Sub Categories</h4>
+                  {canAdd && (
                     <Link to="/add-sub-category" className="btn btn-primary">
                       <i className="mdi mdi-plus me-1" /> Add Sub Category
                     </Link>
                   )}
-                                </div>
+                </div>
 
                 <div className="d-flex justify-content-end mb-2">
                   <input
@@ -183,7 +189,14 @@ const ListSubCategories = () => {
                   progressPending={pending}
                   progressComponent={<Spinner color="primary" />}
                   pagination
-                  paginationServer={false}
+                  paginationServer
+                  paginationTotalRows={totalRows}
+                  paginationPerPage={perPage}
+                  onChangePage={(page) => setCurrentPage(page)}
+                  onChangeRowsPerPage={(newPerPage, page) => {
+                    setPerPage(newPerPage);
+                    setCurrentPage(page);
+                  }}
                   highlightOnHover
                   persistTableHead
                   responsive

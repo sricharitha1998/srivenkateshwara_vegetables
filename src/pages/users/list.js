@@ -39,7 +39,7 @@ const ListUsers = () => {
       }
 
       const result = await response.json();
-      setData(result?.data || []);
+      setData(Array.isArray(result?.data?.results) ? result.data?.results : (Array.isArray(result?.data?.data) ? result?.data?.data : []));
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
@@ -51,7 +51,7 @@ const ListUsers = () => {
     () => [
       {
         name: "No.",
-        cell: (row, index) => data.length - index,
+        cell: (row, index) => index + 1,
         sortable: false,
       },
       {

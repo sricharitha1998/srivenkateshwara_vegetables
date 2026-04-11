@@ -96,6 +96,7 @@ const AddCategory = () => {
                           className="form-control"
                           accept="image/*"
                           onChange={handleImageChange}
+                          required
                         />
                       </div>
                       {imagePreview && (

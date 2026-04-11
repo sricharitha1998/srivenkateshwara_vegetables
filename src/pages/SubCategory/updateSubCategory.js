@@ -116,7 +116,8 @@ const UpdateSubCategory = () => {
       });
 
       const result = await res.json();
-      setCategories(result?.data || []);
+      const items = Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : (Array.isArray(result?.data) ? result.data : []));
+      setCategories(items);
     } catch (err) {
       console.error("Error loading categories", err);
       alert("Failed to load categories.");
@@ -172,7 +173,7 @@ const UpdateSubCategory = () => {
                           required
                         >
                           <option value="">-- Select Type --</option>
-                          {categories.map((item) => (
+                          {categories?.map((item) => (
                             <option key={item.id} value={item.id}>
                               {item.name}
                             </option>
@@ -200,6 +201,7 @@ const UpdateSubCategory = () => {
                       <div className="mb-3">
                         <Label htmlFor="image">Image</Label>
                         <Input
+                        required
                           id="image"
                           name="image"
                           type="file"

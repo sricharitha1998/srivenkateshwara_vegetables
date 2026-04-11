@@ -15,7 +15,13 @@ axiosApi.defaults.headers.common["Authorization"] = token
 
 axiosApi.interceptors.response.use(
   response => response,
-  error => Promise.reject(error)
+  error => {
+    if (error.response && (error.response?.status === 401 || error.response?.status_code === 401)) {
+      localStorage.removeItem("authUser");
+      window.location.href = "/";
+    }
+    return Promise.reject(error);
+  }
 )
 
 export async function get(url, config = {}) {
