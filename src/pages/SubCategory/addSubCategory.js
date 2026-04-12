@@ -26,7 +26,6 @@ const AddSubCategory = () => {
     loading: state.SubCategories?.loading || false,
     error: state.SubCategories?.error || null,
   }));
-console.log("error", error)
   const [categories, setCategories] = useState([]);
 
   const [formData, setFormData] = useState({
@@ -113,7 +112,7 @@ console.log("error", error)
 
   const fetchCategories = async () => {
     try {
-      const response = await fetchWithAuth(`${process.env.REACT_APP_API_URL}/categories/`, {
+      const response = await fetchWithAuth(`${process.env.REACT_APP_API_URL}/categories/?dropdown=true`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });

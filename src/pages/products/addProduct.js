@@ -76,7 +76,7 @@ const AddProduct = () => {
     const fetchCategories = async () => {
       try {
         const userData = JSON.parse(localStorage.getItem("user"));
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/categories/`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/categories/?dropdown=true`, {
           headers: { Authorization: `Bearer ${userData?.access}` },
         });
         const result = await response.json();
@@ -211,8 +211,6 @@ const AddProduct = () => {
       images: newFiles,
     };
 
-    console.log(`${isEdit ? "Updating" : "Submitting"} Product Payload:`, payload);
-
     if (isEdit) {
       dispatch(updateProduct(id, payload, navigate));
     } else {
@@ -269,6 +267,7 @@ const AddProduct = () => {
                         placeholder="Select Subcategory..."
                         isDisabled={subcategories.length === 0}
                         isClearable
+                        styles={customSelectStyles}
                         required
                       />
                     </Col>

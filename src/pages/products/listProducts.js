@@ -73,10 +73,10 @@ const ListProducts = () => {
     return response;
   };
 
-  const fetchProducts = async (page = currentPage, limit = perPage) => {
+  const fetchProducts = async (page = currentPage, limit = perPage, search = searchText) => {
     setLoading(true);
     try {
-      const response = await makeAuthenticatedRequest(`${API_BASE}/products/?page_no=${page}&page_size=${limit}`);
+      const response = await makeAuthenticatedRequest(`${API_BASE}/products/?page_no=${page}&page_size=${limit}&search=${search}`);
       if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
       const result = await response.json();
       const items = Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : (Array.isArray(result?.data) ? result.data : []));
@@ -138,11 +138,10 @@ const ListProducts = () => {
     }
   };
 
-  const filteredData = useMemo(() => {
-    return data.filter(item =>
-      item.name.toLowerCase().includes(searchText.toLowerCase())
-    );
-  }, [data, searchText]);
+  const handleSearch = (e) => {
+    setSearchText(e.target.value);
+    setCurrentPage(1);
+  };
 
   const columns = useMemo(() => [
     {
@@ -188,8 +187,8 @@ const ListProducts = () => {
   ].filter(Boolean), [canEdit, canDelete, openProductModal]);
 
   useEffect(() => {
-    fetchProducts(currentPage, perPage);
-  }, [currentPage, perPage]);
+    fetchProducts(currentPage, perPage, searchText);
+  }, [currentPage, perPage, searchText]);
 
   return (
     <div className="page-content">
@@ -214,14 +213,14 @@ const ListProducts = () => {
                     className="form-control w-25"
                     placeholder="Search Product..."
                     value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
+                    onChange={handleSearch}
                   />
                 </div>
 
                 {/* Data Table handles own loading state */}
                 <DataTable
                   columns={columns}
-                  data={filteredData}
+                  data={data}
                   pagination
                   paginationServer
                   paginationTotalRows={totalRows}

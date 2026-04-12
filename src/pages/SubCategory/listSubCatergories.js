@@ -65,10 +65,10 @@ const ListSubCategories = () => {
     return response;
   };
 
-  const fetchCategories = async (page = currentPage, limit = perPage) => {
+  const fetchCategories = async (page = currentPage, limit = perPage, search = searchText) => {
     setPending(true);
     try {
-      const response = await makeAuthenticatedRequest(`${API_BASE}/subcategories/?page_no=${page}&page_size=${limit}`);
+      const response = await makeAuthenticatedRequest(`${API_BASE}/subcategories/?page_no=${page}&page_size=${limit}&search=${search}`);
       if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
       const result = await response.json();
       const items = Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : (Array.isArray(result?.data) ? result.data : []));
@@ -100,11 +100,10 @@ const ListSubCategories = () => {
     }
   };
 
-  const filteredItems = data.filter(
-    (item) =>
-      item.name?.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.category_name?.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const handleSearch = (e) => {
+    setSearchText(e.target.value);
+    setCurrentPage(1);
+  };
 
   const columns = useMemo(() => {
     const cols = [
@@ -154,8 +153,8 @@ const ListSubCategories = () => {
   }, [canEdit, canDelete]);
 
   useEffect(() => {
-    fetchCategories(currentPage, perPage);
-  }, [currentPage, perPage]);
+    fetchCategories(currentPage, perPage, searchText);
+  }, [currentPage, perPage, searchText]);
 
   return (
     <div className="page-content">
@@ -179,13 +178,14 @@ const ListSubCategories = () => {
                     type="text"
                     className="form-control w-auto"
                     placeholder="Search Category"
-                    onChange={(e) => setSearchText(e.target.value)}
+                    value={searchText}
+                    onChange={handleSearch}
                   />
                 </div>
 
                 <DataTable
                   columns={columns}
-                  data={filteredItems}
+                  data={data}
                   progressPending={pending}
                   progressComponent={<Spinner color="primary" />}
                   pagination

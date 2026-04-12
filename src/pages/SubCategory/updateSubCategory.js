@@ -11,6 +11,8 @@ import {
   Form,
   Alert,
 } from "reactstrap";
+import Select from "react-select";
+import { customSelectStyles } from "../../helpers/customStyles";
 import { useNavigate, useParams } from "react-router-dom";
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 import { useDispatch, useSelector } from "react-redux";
@@ -111,7 +113,7 @@ const UpdateSubCategory = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetchWithAuth(`${process.env.REACT_APP_API_URL}/categories/`, {
+      const res = await fetchWithAuth(`${process.env.REACT_APP_API_URL}/categories/?dropdown=true`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -165,22 +167,30 @@ const UpdateSubCategory = () => {
                     <Col md={6}>
                       <div className="mb-3">
                         <Label htmlFor="categoryType">Category Type</Label>
-                        <Input
+                        <Select
+                          required
                           id="categoryType"
                           name="categoryType"
-                          type="select"
-                          className="form-select"
-                          value={formData.categoryType}
-                          onChange={handleNameChange}
-                          required
-                        >
-                          <option value="">-- Select Type --</option>
-                          {categories?.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {item.name}
-                            </option>
-                          ))}
-                        </Input>
+                          styles={customSelectStyles}
+                          options={categories?.map((item) => ({
+                            value: item.id,
+                            label: item.name,
+                          }))}
+                          value={categories
+                            ?.map((item) => ({
+                              value: item.id,
+                              label: item.name,
+                            }))
+                            .find((option) => option.value == formData.categoryType)}
+                          onChange={(selectedOption) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              categoryType: selectedOption ? selectedOption.value : "",
+                            }))
+                          }
+                          placeholder="-- Select Type --"
+                          isClearable
+                        />
                       </div>
                     </Col>
 
@@ -203,7 +213,6 @@ const UpdateSubCategory = () => {
                       <div className="mb-3">
                         <Label htmlFor="image">Image</Label>
                         <Input
-                        required
                           id="image"
                           name="image"
                           type="file"

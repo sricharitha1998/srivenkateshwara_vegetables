@@ -12,6 +12,7 @@ const ListCategories = () => {
   const [perPage, setPerPage] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const breadcrumbItems = [
     { title: "Category", link: "#" },
     { title: "List Categories", link: "#" },
@@ -22,17 +23,10 @@ const ListCategories = () => {
     "Content-Type": "application/json",
   });
 
-  const filteredData = async (e) => {
+  const filteredData = (e) => {
     const value = e.target.value;
-    if (value) {
-      const getvalues = await data.filter((item) =>
-        item.name.toLowerCase().includes(value.toLowerCase())
-      );
-      setData(getvalues);
-      setTotalRows(getvalues.length);
-    } else {
-      fetchCategories(currentPage, perPage);
-    }
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page on search
   };
 
   const refreshAccessToken = async (refreshToken) => {
@@ -70,10 +64,10 @@ const ListCategories = () => {
     return response;
   };
 
-  const fetchCategories = async (page = currentPage, limit = perPage) => {
+  const fetchCategories = async (page = currentPage, limit = perPage, search = searchTerm) => {
     setLoading(true);  // Set loading to true when starting fetch
     try {
-      const response = await makeAuthenticatedRequest(`${API_BASE}/categories/?page_no=${page}&page_size=${limit}`);
+      const response = await makeAuthenticatedRequest(`${API_BASE}/categories/?page_no=${page}&page_size=${limit}&search=${search}`);
       if (!response.ok) throw new Error(`Fetch failed with status ${response.status}`);
       const result = await response.json();
       const items = Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : (Array.isArray(result?.data) ? result.data : []));
@@ -157,8 +151,8 @@ const ListCategories = () => {
   }, [data.length, currentPage, perPage, canEdit, canDelete]);
 
   useEffect(() => {
-    fetchCategories(currentPage, perPage);
-  }, [currentPage, perPage]);
+    fetchCategories(currentPage, perPage, searchTerm);
+  }, [currentPage, perPage, searchTerm]);
 
   return (
     <div className="page-content">
