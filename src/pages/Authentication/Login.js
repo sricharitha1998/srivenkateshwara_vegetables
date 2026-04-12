@@ -86,27 +86,16 @@ console.log("formData", formData)
                               />
                             </div>
 
-                            <div className="form-check">
-                              <Input type="checkbox" className="form-check-input" id="customControlInline" />
-                              <Label className="form-check-label" htmlFor="customControlInline">Remember me</Label>
-                            </div>
-
                             <div className="mt-4 text-center">
                                 <Button color="primary" className="w-md waves-effect waves-light" type="submit" disabled={loading}>
                                   {loading ? "Logging in..." : "Log In"}
                                 </Button>
                             </div>
 
-                            <div className="mt-4 text-center">
-                              <Link to="/forgot-password" className="text-muted">
-                                <i className="mdi mdi-lock me-1"></i> Forgot your password?
-                              </Link>
-                            </div>
                           </form>
                         </div>
 
                         <div className="mt-5 text-center">
-                          <p>Don't have an account? <Link to="/register" className="fw-medium text-primary"> Register </Link></p>
                           <p>© 2025 Code&Pix</p>
                         </div>
                       </div>
