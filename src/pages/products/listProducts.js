@@ -24,7 +24,6 @@ const ListProducts = () => {
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [imageUrls, setImageUrls] = useState({});
   const [searchText, setSearchText] = useState("");
 
   const user = useMemo(() => JSON.parse(localStorage.getItem("user")) || {}, []);
@@ -110,13 +109,6 @@ const ListProducts = () => {
 
   const openProductModal = async (product) => {
     try {
-      const urls = {};
-      for (const image of product.images || []) {
-        const url = await getImage(image.secure_url);
-        urls[image.secure_url] = url;
-      }
-
-      setImageUrls(urls);
       setSelectedProduct(product);
       setModalOpen(true);
     } catch (error) {
@@ -127,7 +119,6 @@ const ListProducts = () => {
   const closeProductModal = () => {
     setModalOpen(false);
     setSelectedProduct(null);
-    setImageUrls({});
   };
 
   const handleDelete = async (id) => {
@@ -262,7 +253,7 @@ const ListProducts = () => {
               {selectedProduct?.images?.map((image, index) => (
                 <img
                   key={index}
-                  src={imageUrls[image.secure_url]}
+                  src={image.image}
                   alt={image.alt_text || `product-${index}`}
                   className="img-thumbnail"
                   style={{ width: "120px", height: "120px", objectFit: "cover", marginRight: "10px" }}
