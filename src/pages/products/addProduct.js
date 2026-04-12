@@ -10,6 +10,7 @@ import {
   Label,
   Row,
   Form,
+  Alert
 } from "reactstrap";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
@@ -65,8 +66,9 @@ const AddProduct = () => {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
 
-  const { loading } = useSelector((state) => ({
+  const { loading, error } = useSelector((state) => ({
     loading: state.Products?.loading || false,
+    error: state.Products?.error || null,
   }));
 
   // --- Fetching Categories ---
@@ -228,6 +230,7 @@ const AddProduct = () => {
           <Col lg={12}>
             <Card>
               <CardBody>
+                {error && <Alert color="danger">{error}</Alert>}
                 <Form onSubmit={handleSubmit}>
                   <Row>
                     <Col md={6} className="mb-3">

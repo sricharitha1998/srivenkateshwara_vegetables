@@ -9,6 +9,7 @@ import {
   Label,
   Row,
   Form,
+  Alert,
 } from "reactstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import Breadcrumbs from "../../components/Common/Breadcrumb";
@@ -158,6 +159,7 @@ const UpdateSubCategory = () => {
           <Col lg={12}>
             <Card>
               <CardBody>
+                {error && <Alert color="danger">{error}</Alert>}
                 <Form onSubmit={handleSubmit}>
                   <Row>
                     <Col md={6}>

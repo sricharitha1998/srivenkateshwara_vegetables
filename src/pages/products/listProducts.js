@@ -262,7 +262,7 @@ const ListProducts = () => {
             </Col>
             <Col lg={8}>
               <h5>Description:</h5>
-              <p>{selectedProduct?.description}</p>
+              <div dangerouslySetInnerHTML={{ __html: selectedProduct?.description || "" }} />
 
               <h5>Variants:</h5>
               <ul>

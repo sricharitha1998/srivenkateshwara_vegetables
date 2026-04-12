@@ -64,7 +64,10 @@ function* addCategory({ payload: { categoryData, navigate } }) {
         if (navigate) navigate("/list-category");
         
     } catch (error) {
-        yield put(addCategoryFail(error.response?.data?.message || error.message || "Failed to add category"));
+        const errorMsg = (error.response?.status === 400 || error.response?.data?.status_code === 400)
+            ? "Category name already exists"
+            : (error.response?.data?.message || error.message || "Failed to add category");
+        yield put(addCategoryFail(errorMsg));
     }
 }
 
@@ -108,7 +111,10 @@ function* updateCategory({ payload: { id, categoryData, navigate } }) {
         if (navigate) navigate("/list-category");
         
     } catch (error) {
-        yield put(updateCategoryFail(error.response?.data?.message || error.message || "Failed to update category"));
+        const errorMsg = (error.response?.status === 400 || error.response?.data?.status_code === 400)
+            ? (error.response?.data?.message || "Category name already exists")
+            : (error.response?.data?.message || error.message || "Failed to update category");
+        yield put(updateCategoryFail(errorMsg));
     }
 }
 

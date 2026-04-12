@@ -23,66 +23,62 @@ const refreshAccessToken = async (refreshToken) => {
 };
 
 function* addProduct({ payload: { productData, navigate } }) {
-    const formDataBody = new FormData();
-    formDataBody.append("name", productData.name);
-    formDataBody.append("category", productData.category);
-    if (productData.description) formDataBody.append("description", productData.description);
-    if (productData.brand) formDataBody.append("brand", productData.brand);
-    if (productData.subcategory) formDataBody.append("subcategory", productData.subcategory);
-
-    if (productData.variants) {
-        formDataBody.append("variants", JSON.stringify(productData.variants));
-    }
-
-    if (productData.images && productData.images.length > 0) {
-        productData.images.forEach((file, index) => {
-            // Ensure we are appending the actual File object
-            const fileToAppend = file.originFileObj || file;
-            console.log(`Saga addProduct - Appending image ${index}:`, fileToAppend);
-            formDataBody.append("images", fileToAppend, fileToAppend.name || `product_image_${index}.png`);
-        });
-    }
-
-    // Debug: Log all FormData entries
-    console.log("Saga addProduct - Final FormData contents:");
-    for (let [key, value] of formDataBody.entries()) {
-        console.log(`${key}:`, value);
-    }
-
-    const userDataStr = localStorage.getItem("user");
-    if (!userDataStr) throw new Error("No authentication data found.");
-    const userData = JSON.parse(userDataStr);
-    let access = userData.access;
-
-    let responseData;
-
     try {
-        const response = yield call(axios.post, `${API_BASE}/products/`, formDataBody, {
-            headers: {
-                Authorization: `Bearer ${access}`
-            }
-        });
-        responseData = response.data;
-    } catch (error) {
-        if (error.response && error.response.status === 401) {
-            access = yield call(refreshAccessToken, userData.refresh);
-            const retryResponse = yield call(axios.post, `${API_BASE}/products/`, formDataBody, {
+        const formDataBody = new FormData();
+        formDataBody.append("name", productData.name);
+        formDataBody.append("category", productData.category);
+        if (productData.description) formDataBody.append("description", productData.description);
+        if (productData.brand) formDataBody.append("brand", productData.brand);
+        if (productData.subcategory) formDataBody.append("subcategory", productData.subcategory);
+
+        if (productData.variants) {
+            formDataBody.append("variants", JSON.stringify(productData.variants));
+        }
+
+        if (productData.images && productData.images.length > 0) {
+            productData.images.forEach((file, index) => {
+                const fileToAppend = file.originFileObj || file;
+                formDataBody.append("images", fileToAppend, fileToAppend.name || `product_image_${index}.png`);
+            });
+        }
+
+        const userDataStr = localStorage.getItem("user");
+        if (!userDataStr) throw new Error("No authentication data found.");
+        const userData = JSON.parse(userDataStr);
+        let access = userData.access;
+
+        let responseData;
+
+        try {
+            const response = yield call(axios.post, `${API_BASE}/products/`, formDataBody, {
                 headers: {
                     Authorization: `Bearer ${access}`
                 }
             });
-            responseData = retryResponse.data;
-        } else {
-            throw error;
+            responseData = response.data;
+        } catch (error) {
+            if (error.response && error.response.status === 401) {
+                access = yield call(refreshAccessToken, userData.refresh);
+                const retryResponse = yield call(axios.post, `${API_BASE}/products/`, formDataBody, {
+                    headers: {
+                        Authorization: `Bearer ${access}`
+                    }
+                });
+                responseData = retryResponse.data;
+            } else {
+                throw error;
+            }
         }
+
+        yield put(addProductSuccess(responseData));
+        if (navigate) navigate("/list-products");
+
+    } catch (error) {
+        const errorMsg = (error.response?.status === 400 || error.response?.data?.status_code === 400)
+            ? "Product name already exists"
+            : (error.response?.data?.message || error.message || "Failed to add product");
+        yield put(addProductFail(errorMsg));
     }
-
-    yield put(addProductSuccess(responseData));
-    if (navigate) navigate("/list-products");
-
-    // } catch (error) {
-    //     yield put(addProductFail(error.response?.data?.message || error.message || "Failed to add product"));
-    // }
 }
 
 function* updateProduct({ payload: { id, productData, navigate } }) {
@@ -151,8 +147,10 @@ function* updateProduct({ payload: { id, productData, navigate } }) {
         if (navigate) navigate("/list-products");
 
     } catch (error) {
-        alert("Failed to update product.");
-        yield put(updateProductFail(error.response?.data?.message || error.message || "Failed to update product"));
+        const errorMsg = (error.response?.status === 400 || error.response?.data?.status_code === 400)
+            ? "Product name already exists"
+            : (error.response?.data?.message || error.message || "Failed to update product");
+        yield put(updateProductFail(errorMsg));
     }
 }
 

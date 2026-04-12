@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   Button, Card, CardBody, CardTitle, Col, Container,
   Input, Label, Row, Nav, NavItem, NavLink,
-  TabContent, TabPane, Form
+  TabContent, TabPane, Form, Alert
 } from "reactstrap";
 import Dropzone from "react-dropzone";
 import classnames from "classnames";
@@ -53,8 +53,9 @@ const EditProduct = () => {
   ]);
 
   const dispatch = useDispatch();
-  const { loading } = useSelector(state => ({
-    loading: state.Products?.loading || false
+  const { loading, error } = useSelector(state => ({
+    loading: state.Products?.loading || false,
+    error: state.Products?.error || null
   }));
 
   const token = JSON.parse(localStorage.getItem("user"))?.access;
@@ -222,6 +223,7 @@ const EditProduct = () => {
           <Col lg={12}>
             <Card>
               <CardBody>
+                {error && <Alert color="danger">{error}</Alert>}
                 {/* <CardTitle tag="h4">Edit Product</CardTitle> */}
                 <Form onSubmit={handleSubmit}>
                   {/* Product Info Section */}

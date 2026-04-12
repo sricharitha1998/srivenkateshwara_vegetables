@@ -9,6 +9,7 @@ import {
   Label,
   Row,
   Form,
+  Alert,
 } from "reactstrap";
 import Select from "react-select";
 import { customSelectStyles } from "../../helpers/customStyles";
@@ -25,7 +26,7 @@ const AddSubCategory = () => {
     loading: state.SubCategories?.loading || false,
     error: state.SubCategories?.error || null,
   }));
-
+console.log("error", error)
   const [categories, setCategories] = useState([]);
 
   const [formData, setFormData] = useState({
@@ -139,6 +140,7 @@ const AddSubCategory = () => {
           <Col lg={12}>
             <Card>
               <CardBody>
+                {error && <Alert color="danger">{error}</Alert>}
                 <Form onSubmit={handleSubmit}>
                   <Row>
                     <Col md={6}>

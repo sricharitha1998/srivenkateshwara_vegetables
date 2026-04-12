@@ -43,7 +43,8 @@ const rootReducer = combineReducers({
     chat,
     Dashboard,
     Categories,
-
+    SubCategories,
+    Products,
 });
 
 export default rootReducer;

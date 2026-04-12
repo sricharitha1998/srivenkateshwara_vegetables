@@ -64,7 +64,11 @@ function* addSubCategory({ payload: { subCategoryData, navigate } }) {
         if (navigate) navigate("/list-sub-category");
         
     } catch (error) {
-        yield put(addSubCategoryFail(error.response?.data?.message || error.message || "Failed to add subcategory"));
+        const errorMsg = (error.response?.status === 400 || error.response?.data?.status_code === 400)
+            ? "Sub Category name already exists"
+            : (error.response?.data?.message || error.message || "Failed to add subcategory");
+            console.log("errorMsg", errorMsg)
+        yield put(addSubCategoryFail(errorMsg));
     }
 }
 
@@ -109,7 +113,10 @@ function* updateSubCategory({ payload: { id, subCategoryData, navigate } }) {
         if (navigate) navigate("/list-sub-category");
         
     } catch (error) {
-        yield put(updateSubCategoryFail(error.response?.data?.message || error.message || "Failed to update subcategory"));
+        const errorMsg = (error.response?.status === 400 || error.response?.data?.status_code === 400)
+            ? (error.response?.data?.message || "Sub Category name already exists")
+            : (error.response?.data?.message || error.message || "Failed to update subcategory");
+        yield put(updateSubCategoryFail(errorMsg));
     }
 }
 
