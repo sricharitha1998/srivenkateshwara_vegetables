@@ -123,8 +123,8 @@ function RegisterForm({ user, registrationError, loading, onRegisterUser }) {
                                             </div>
 
                                             <div className="mt-5 text-center">
-                                                <p>Already have an account ? <Link to="/" className="fw-medium text-primary"> Login</Link> </p>
-                                                <p>© 2021 Nazox. Crafted with <i className="mdi mdi-heart text-danger"></i> by Themesdesign</p>
+                                                {/* <p>Already have an account ? <Link to="/" className="fw-medium text-primary"> Login</Link> </p>
+                                                <p>© 2021 Nazox. Crafted with <i className="mdi mdi-heart text-danger"></i> by Themesdesign</p> */}
                                             </div>
                                         </div>
                                     </Col>

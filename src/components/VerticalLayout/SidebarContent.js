@@ -224,12 +224,52 @@ const updateActiveMenu = () => {
             </li>
           )}
 
+          {(user?.is_superadmin ||
+  user?.permissions?.can_view_delivery_boy) && (
+  <li>
+    <Link to="/#" className="has-arrow waves-effect">
+      <i className="ri-bike-line"></i>
+      <span className="ms-1">Delivery Boys</span>
+    </Link>
+
+    <ul className="sub-menu">
+      {(user?.is_superadmin ||
+        user?.permissions?.can_add_delivery_boy) && (
+        <li>
+          <Link to="/add-delivery-boy">Add Delivery Boy</Link>
+        </li>
+      )}
+
+      <li>
+        <Link to="/list-delivery-boys">List Delivery Boys</Link>
+      </li>
+    </ul>
+  </li>
+)}
+
           {(user?.is_superadmin || user?.permissions?.can_view_users) && (
             <li>
               <Link to="/list-users" className="waves-effect">
                 <i className="ri-team-line"></i>
                 <span className="ms-1">Users</span>
               </Link>
+            </li>
+          )}
+
+          {user?.is_superadmin && (
+            <li>
+              <Link to="/#" className="has-arrow waves-effect">
+                <i className="ri-image-line"></i>
+                <span className="ms-1">Banners</span>
+              </Link>
+              <ul className="sub-menu">
+                <li>
+                  <Link to="/add-banner">Add</Link>
+                </li>
+                <li>
+                  <Link to="/list-banners">List</Link>
+                </li>
+              </ul>
             </li>
           )}
           <li>

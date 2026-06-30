@@ -3,6 +3,8 @@ import { Row, Col, Input, Button, Alert, Container, Label } from "reactstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, Link } from 'react-router-dom';
 import { checkLogin } from "../../store/actions";
+import logo from "../../assets/images/logo.png";
+import bgImage from "../../assets/images/19891.png";
 
 // images
 import logodark from "../../assets/images/logo-dark.png";
@@ -49,17 +51,21 @@ console.log("formData", formData)
                       <div>
                         <div className="text-center">
                           <Link to="/">
-                            <img src={logodark} alt="" height="20" className="auth-logo logo-dark mx-auto" />
-                            <img src={logolight} alt="" height="20" className="auth-logo logo-light mx-auto" />
-                          </Link>
+  <img
+    src={logo}
+    alt="Vegga Fresh"
+    height="100"
+    className="auth-logo mx-auto d-block"
+  />
+</Link>
                           <h4 className="font-size-18 mt-4">Welcome Back!</h4>
-                          <p className="text-muted">Sign in to continue</p>
+                          <p className="text-muted">Log in to Admin Vegga Fresh</p>
                         </div>
                         {loginError && loginError !== "aaa" ? <Alert color="danger">{loginError}</Alert> : null}
                         <div className="p-2 mt-5">
                           <form className="form-horizontal" onSubmit={handleLogin}>
-                            <div className="auth-form-group-custom mb-4">
-                              <i className="ri-user-2-line auti-custom-input-icon"></i>
+                            <div className="auth-form-group-custom mb-4" style={{ color: "#16a34a", fontSize: "20px" }}>
+                              <i className="ri-user-2-line auti-custom-input-icon" style={{ color: "#16a34a", fontSize: "20px" }}></i>
                               <Label htmlFor="username">Email</Label>
                               <Input
                                 type="text"
@@ -72,8 +78,8 @@ console.log("formData", formData)
                               />
                             </div>
 
-                            <div className="auth-form-group-custom mb-4">
-                              <i className="ri-lock-2-line auti-custom-input-icon"></i>
+                            <div className="auth-form-group-custom mb-4" style={{ color: "#16a34a", fontSize: "20px" }}>
+                              <i className="ri-lock-2-line auti-custom-input-icon" style={{ color: "#16a34a", fontSize: "20px" }}></i>
                               <Label htmlFor="password">Password</Label>
                               <Input
                                 type="password"
@@ -87,16 +93,25 @@ console.log("formData", formData)
                             </div>
 
                             <div className="mt-4 text-center">
-                                <Button color="primary" className="w-md waves-effect waves-light" type="submit" disabled={loading}>
-                                  {loading ? "Logging in..." : "Log In"}
-                                </Button>
+                                <Button
+  type="submit"
+  disabled={loading}
+  className="w-md waves-effect waves-light"
+  style={{
+    backgroundColor: "#16a34a",
+    border: "1px solid #16a34a",
+    color: "#fff"
+  }}
+>
+  {loading ? "Logging in..." : "Log In"}
+</Button>
                             </div>
 
                           </form>
                         </div>
 
                         <div className="mt-5 text-center">
-                          <p>© 2025 Code&Pix</p>
+                          <p>© 2026 Vegga Fresh. All rights reserved.</p>
                         </div>
                       </div>
                     </Col>
@@ -105,9 +120,15 @@ console.log("formData", formData)
               </div>
             </Col>
             <Col lg={8}>
-              <div className="authentication-bg">
-                <div className="bg-overlay"></div>
-              </div>
+              <div
+  className="authentication-bg"
+  style={{
+    backgroundImage: `url(${bgImage})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+  }}
+></div>
             </Col>
           </Row>
         </Container>

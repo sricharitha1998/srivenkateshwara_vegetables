@@ -17,6 +17,7 @@ import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import Select from "react-select";
 import { customSelectStyles } from "../../helpers/customStyles";
 import Dropzone from "react-dropzone";
+import imageCompression from "browser-image-compression";
 import Breadcrumb from "../../components/Common/Breadcrumb";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -65,6 +66,8 @@ const AddProduct = () => {
   const [selectedFiles, setSelectedFiles] = useState([]); // { binary?, preview, name, isExisting: boolean }
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [imageError, setImageError] = useState("");
 
   const { loading, error } = useSelector((state) => ({
     loading: state.Products?.loading || false,
@@ -177,14 +180,40 @@ const AddProduct = () => {
     }
   };
 
-  const onDrop = (files) => {
-    const updated = files.map((file) =>
-      Object.assign(file, {
-        preview: URL.createObjectURL(file),
-        isExisting: false
-      })
-    );
-    setSelectedFiles((prev) => [...prev, ...updated]);
+  const onDrop = async (files) => {
+    setImageError("");
+    setIsCompressing(true);
+
+    const compressionOptions = {
+    maxSizeMB: 0.25,
+    maxWidthOrHeight: 800,
+    useWebWorker: true,
+    initialQuality: 0.75,
+};
+
+    try {
+      const compressedFiles = await Promise.all(
+        files.map(async (file) => {
+          const compressedFile = await imageCompression(file, compressionOptions);
+          const imageFile =
+            compressedFile instanceof File
+              ? compressedFile
+              : new File([compressedFile], file.name, { type: compressedFile.type || file.type });
+
+          return Object.assign(imageFile, {
+            preview: URL.createObjectURL(imageFile),
+            isExisting: false,
+          });
+        })
+      );
+
+      setSelectedFiles((prev) => [...prev, ...compressedFiles]);
+    } catch (err) {
+      console.error("Image compression failed:", err);
+      setImageError("Unable to compress one or more images. Please try different images.");
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const removeFile = (index) => {
@@ -289,7 +318,7 @@ const AddProduct = () => {
                       <Col md={2}>
                         <Label>Quantity</Label>
                         <Input
-                          type="text"
+                          type="number"
                           name="quantity"
                           value={variant.quantity}
                           onChange={(e) => handleVariantChange(index, e)}
@@ -363,6 +392,7 @@ const AddProduct = () => {
                   </Button>
 
                   <CardTitle className="h5 mt-4">Product Images</CardTitle>
+                  {imageError && <Alert color="danger">{imageError}</Alert>}
                   <Dropzone onDrop={onDrop} accept="image/*" multiple>
                     {({ getRootProps, getInputProps }) => (
                       <div
@@ -376,7 +406,11 @@ const AddProduct = () => {
                         }}
                       >
                         <input {...getInputProps()} />
-                        <p>Drag 'n' drop some files here, or click to select files</p>
+                        <p>
+                          {isCompressing
+                            ? "Compressing images..."
+                            : "Drag 'n' drop some files here, or click to select files"}
+                        </p>
                       </div>
                     )}
                   </Dropzone>
@@ -407,8 +441,8 @@ const AddProduct = () => {
                   </Row>
 
                   <div className="text-end mt-4">
-                    <Button color="success" type="submit" disabled={loading} size="lg">
-                      {loading ? "Processing..." : isEdit ? "Update Product" : "Submit Product"}
+                    <Button color="success" type="submit" disabled={loading || isCompressing} size="lg">
+                      {loading || isCompressing ? "Processing..." : isEdit ? "Update Product" : "Submit Product"}
                     </Button>
                   </div>
                 </Form>

@@ -3,11 +3,8 @@ import { Card, CardBody, Container, Modal, Spinner, ModalHeader, ModalBody, Moda
 import { Link } from "react-router-dom";
 import Select from "react-select";
 import { customSelectStyles } from "../../helpers/customStyles";
-import TableContainer from "../../components/Common/TableContainer";
 import Breadcrumbs from '../../components/Common/Breadcrumb';
 import DataTable from "react-data-table-component";
-import { DeliveryPartnersApi } from "../../redux/orders/ordersActions";
-import { useDispatch } from "react-redux";
 
 const ListOrders = () => {
   const [modal, setModal] = useState(false);
@@ -21,54 +18,148 @@ const ListOrders = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [status, setStatus] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState("all");
-  const dispatch = useDispatch();
   const [deliveryList, setDeliveryList] = useState([]);
+  const [deliveryPersonsLoading, setDeliveryPersonsLoading] = useState(false);
+  const [deliveryPersonsError, setDeliveryPersonsError] = useState(null);
+  const [assignOrderId, setAssignOrderId] = useState(null);
   const [isAddMode, setIsAddMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isNameInput, setIsNameInput] = useState(false);
   const [isMobileInput, setIsMobileInput] = useState(false);
-  const [filteredOptions, setFilteredOptions] = useState([]);
   const [filters, setFilters] = useState({
     emailSearch: "",
     searchOrderID: "",
     fromDate: "",
     toDate: "",
   });
+  const [deliverySlots, setDeliverySlots] = useState([]);
+  const [selectedDeliveryDate, setSelectedDeliveryDate] = useState("");
+  const [selectedDeliverySlot, setSelectedDeliverySlot] = useState(null);
 
+  // Helper function to get base URL for admin endpoints
+  const getAdminBaseUrl = () => {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    // Remove /api/v1 suffix if present
+    return apiUrl.replace(/\/api\/v1\/?$/, "");
+  };
 
   const fetchDeliveryPersons = async () => {
+    setDeliveryPersonsLoading(true);
+    setDeliveryPersonsError(null);
     try {
       const userData = JSON.parse(localStorage.getItem("user"));
       const accessToken = userData?.access;
-      // console.log("accessToken", accessToken)
-      // await dispatch(DeliveryPartnersApi(accessToken, dispatch));
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/delivery-persons/?page_no=1&page_size=100`, {
+      if (!accessToken) {
+        setDeliveryPersonsError("Access token missing. Please log in again.");
+        return;
+      }
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/delivery-persons/?page_no=1&page_size=100`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData?.message || `Failed to fetch delivery persons: ${response.status} ${response.statusText}`;
+        throw new Error(errorMsg);
+      }
+
       const result = await response.json();
-      setDeliveryList(Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : []));
+
+      let persons = [];
+      if (Array.isArray(result?.data?.results)) {
+        persons = result.data.results;
+      } else if (Array.isArray(result?.data?.data)) {
+        persons = result.data.data;
+      } else if (Array.isArray(result?.data)) {
+        persons = result.data;
+      } else if (Array.isArray(result?.results)) {
+        persons = result.results;
+      } else if (Array.isArray(result)) {
+        persons = result;
+      }
+
+      setDeliveryList(persons);
     } catch (err) {
+      setDeliveryPersonsError(err?.message || "Failed to fetch delivery persons");
       console.error("Error fetching delivery persons:", err);
+    } finally {
+      setDeliveryPersonsLoading(false);
     }
   };
 
-  const toggleModal = () => {
+  const fetchDeliverySlots = async () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem("user"));
+      const accessToken = userData?.access;
+      const baseUrl = getAdminBaseUrl();
+
+      const response = await fetch(`${baseUrl}/admin/delivery-slots/`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        const result = await response.json();
+        const slots = Array.isArray(result?.data?.results)
+          ? result.data.results
+          : Array.isArray(result?.data)
+            ? result.data
+            : [];
+        setDeliverySlots(slots);
+      } else {
+        console.error("Failed to fetch delivery slots");
+      }
+    } catch (err) {
+      console.error("Error fetching delivery slots:", err);
+    }
+  };
+
+  const toggleModal = (order = null) => {
     if (!modal) {
       fetchDeliveryPersons();
+      fetchDeliverySlots();
       setIsNameInput(false);
       setIsMobileInput(false);
+      setSelectedDeliveryDate("");
+      setSelectedDeliverySlot(null);
       if (!isAddMode) {
         setDeliveryInfo((prev) => ({ ...prev, trackingLink: "" }));
       } else {
         setDeliveryInfo({ name: "", mobile: "", trackingLink: "", id: "" });
       }
     }
-    setModal(!modal);
 
+    if (order) {
+      setAssignOrderId(order.id);
+
+      // Pre-populate delivery slot and date from order
+      if (order.delivery_slot || order.delivery_slot_id) {
+        setSelectedDeliverySlot(order.delivery_slot?.id || order.delivery_slot_id);
+      }
+      if (order.delivery_date) {
+        setSelectedDeliveryDate(order.delivery_date);
+      }
+
+      // try to prefill delivery person if present on order
+      const dp = order.delivery_person;
+      if (dp && typeof dp === "object") {
+        setDeliveryInfo((prev) => ({ ...prev, name: dp.name || prev.name, mobile: dp.mobile || prev.mobile, id: dp.id || prev.id }));
+      } else if (typeof dp === "string") {
+        setDeliveryInfo((prev) => ({ ...prev, name: dp, id: "" }));
+      } else {
+        setDeliveryInfo((prev) => ({ ...prev, id: "" }));
+      }
+    } else {
+      setAssignOrderId(null);
+    }
+
+    setModal(!modal);
   };
 
 
@@ -232,28 +323,73 @@ const ListOrders = () => {
   const handleDeliverySubmit = async (e) => {
     e.preventDefault();
 
-    if (isAddMode) {
-      const getDetail = await SubmitDeliveryDetails();
-      const response = await getDetail.json()
-      const requestBody = {
-        status: 3,
-        tracking_link: deliveryInfo?.trackingLink,
-        delivery_person: response?.data?.id
-      };
-
-      updateStatus(requestBody);
-    } else {
-      const requestBody = {
-        status: 3,
-        tracking_link: deliveryInfo?.trackingLink,
-        delivery_person: deliveryInfo?.id
-      };
-
-      updateStatus(requestBody);
+    // Validate required fields
+    if (!assignOrderId) {
+      alert("Order ID is missing");
+      return;
     }
 
+    if (!deliveryInfo?.id && !isAddMode) {
+      alert("Please select a delivery person");
+      return;
+    }
 
-    toggleModal();
+    if (!selectedDeliverySlot) {
+      alert("Delivery slot is not assigned to this order");
+      return;
+    }
+
+    if (!selectedDeliveryDate) {
+      alert("Delivery date is not assigned to this order");
+      return;
+    }
+
+    try {
+      let deliveryPersonId = deliveryInfo?.id;
+
+      // If adding new delivery person, create them first
+      if (isAddMode) {
+        const createResponse = await SubmitDeliveryDetails();
+        if (!createResponse.ok) {
+          throw new Error("Failed to create delivery person");
+        }
+        const responseData = await createResponse.json();
+        deliveryPersonId = responseData?.data?.id;
+      }
+
+      // Now assign delivery to order using correct endpoint
+      const baseUrl = getAdminBaseUrl();
+      const assignPayload = {
+        order_id: String(assignOrderId),
+        delivery_slot_id: Number(selectedDeliverySlot),
+        delivery_person_id: Number(deliveryPersonId),
+        delivery_date: selectedDeliveryDate,
+      };
+
+      const assignResponse = await fetchWithAuth(`${baseUrl}/admin/assign-delivery/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(assignPayload),
+      });
+
+      if (assignResponse.ok) {
+        alert("Delivery assigned successfully!");
+        // Refresh the orders list
+        if (isSearching) {
+          await handleSearch(currentPage, perPage);
+        } else {
+          await fetchOrders(selectedFilter, currentPage, perPage);
+        }
+        toggleModal();
+      } else {
+        const errorData = await assignResponse.json();
+        console.error("Assignment error:", errorData);
+        alert("Failed to assign delivery: " + (errorData?.message || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Error during delivery assignment:", error);
+      alert("Something went wrong: " + error.message);
+    }
   };
 
   const formatDate = (isoDate) => {
@@ -405,6 +541,9 @@ const ListOrders = () => {
           <div className="d-flex align-items-center gap-2 flex-wrap">
             <Button size="sm" color="info" onClick={() => openOrderModal(row)}>
               View
+            </Button>
+            <Button size="sm" color="primary" onClick={() => toggleModal(row)}>
+              Assign
             </Button>
             <Input
               type="select"
@@ -664,12 +803,16 @@ const ListOrders = () => {
                 ) : (
                   <Select
                     styles={customSelectStyles}
-                    options={deliveryList.map(d => ({ label: d.name, value: d.id }))}
-                    onInputChange={(inputValue) => {
+                    isLoading={deliveryPersonsLoading}
+                    isDisabled={deliveryPersonsLoading || Boolean(deliveryPersonsError)}
+                    noOptionsMessage={() => deliveryPersonsError || "No delivery persons found"}
+                    options={deliveryList.map(d => ({ label: d.name || "", value: d.id, mobile: d.mobile }))}
+                    onInputChange={(inputValue, actionMeta) => {
+                      if (actionMeta.action !== "input-change") return;
+
                       const filtered = deliveryList.filter(d =>
-                        d.name.toLowerCase().includes(inputValue.toLowerCase())
+                        (d.name || "").toLowerCase().includes(inputValue.toLowerCase())
                       );
-                      setFilteredOptions(filtered);
 
                       // Update deliveryInfo immediately with typed value
                       setDeliveryInfo((prev) => ({
@@ -692,6 +835,10 @@ const ListOrders = () => {
                       }))
                       .find((opt) => opt.value === deliveryInfo.id)}
                     onChange={(selectedOption) => {
+                      if (!selectedOption) {
+                        setDeliveryInfo((prev) => ({ ...prev, name: "", mobile: "", id: "" }));
+                        return;
+                      }
                       setDeliveryInfo((prev) => ({
                         ...prev,
                         name: selectedOption.label,
@@ -720,7 +867,10 @@ const ListOrders = () => {
                 ) : (
                   <Select
                     styles={customSelectStyles}
-                    options={deliveryList.map(d => ({ label: d.mobile, value: d.id }))}
+                    isLoading={deliveryPersonsLoading}
+                    isDisabled={deliveryPersonsLoading || Boolean(deliveryPersonsError)}
+                    noOptionsMessage={() => deliveryPersonsError || "No delivery persons found"}
+                    options={deliveryList.map(d => ({ label: d.mobile || "", value: d.id, name: d.name }))}
                     value={deliveryList
                       .map((person) => ({
                         label: person.mobile,
@@ -729,11 +879,12 @@ const ListOrders = () => {
                       }))
                       .find((opt) => opt.value === deliveryInfo.id)}
 
-                    onInputChange={(inputValue) => {
+                    onInputChange={(inputValue, actionMeta) => {
+                      if (actionMeta.action !== "input-change") return;
+
                       const filtered = deliveryList.filter(d =>
-                        d.mobile.includes(inputValue)
+                        (d.mobile || "").includes(inputValue)
                       );
-                      setFilteredOptions(filtered);
 
                       // Update deliveryInfo immediately with typed mobile number
                       setDeliveryInfo((prev) => ({
@@ -749,10 +900,15 @@ const ListOrders = () => {
                       }
                     }}
                     onChange={(selectedOption) => {
+                      if (!selectedOption) {
+                        setDeliveryInfo((prev) => ({ ...prev, name: "", mobile: "", id: "" }));
+                        return;
+                      }
                       setDeliveryInfo((prev) => ({
                         ...prev,
                         mobile: selectedOption.label,
                         id: selectedOption.value,
+                        name: selectedOption.name,
                       }));
                       setIsAddMode(false); // Because selected existing partner
                     }}
@@ -764,11 +920,25 @@ const ListOrders = () => {
             </>
           )}
           <FormGroup>
-            <Label>Tracking Link</Label>
+            <Label for="deliverySlot">Delivery Slot</Label>
             <Input
-              name="trackingLink"
-              value={deliveryInfo.trackingLink}
-              onChange={handleDeliveryInputChange}
+              type="text"
+              name="deliverySlot"
+              id="deliverySlot"
+              value={selectedDeliverySlot ? (deliverySlots.find(s => s.id == selectedDeliverySlot)?.name || deliverySlots.find(s => s.id == selectedDeliverySlot)?.start_time) || "" : ""}
+              disabled
+              placeholder="No delivery slot assigned"
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label for="deliveryDate">Delivery Date</Label>
+            <Input
+              type="text"
+              name="deliveryDate"
+              id="deliveryDate"
+              value={selectedDeliveryDate || ""}
+              disabled
+              placeholder="No delivery date assigned"
             />
           </FormGroup>
         </ModalBody>

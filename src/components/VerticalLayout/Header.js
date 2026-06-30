@@ -92,24 +92,38 @@ const Header = ({ t, toggleMenuCallback }) => {
         <div className="navbar-header">
           <div className="d-flex">
             <div className="navbar-brand-box">
-              <Link to="#" className="logo logo-dark">
-                <span className="logo-sm" style={{"color": "white"}}>
-                  E
-                </span>
-                <span className="logo-lg" style={{"color": "white"}}>
-                Ecommerce
-                </span>
-              </Link>
+  <Link to="#" className="logo logo-dark">
+    <span className="logo-sm" style={{ color: "#28a745", fontWeight: "bold" }}>
+      VG
+    </span>
+    <span
+      className="logo-lg"
+      style={{
+        color: "#28a745",
+        fontWeight: "700",
+        fontSize: "22px",
+      }}
+    >
+      Vegga Fresh
+    </span>
+  </Link>
 
-              <Link to="#" className="logo logo-light">
-                <span className="logo-sm" style={{"color": "white"}}>
-                E
-                </span>
-                <span className="logo-lg" style={{"color": "white"}}>
-                Ecommerce
-                </span>
-              </Link>
-            </div>
+  <Link to="#" className="logo logo-light">
+    <span className="logo-sm" style={{ color: "#ffffff", fontWeight: "bold" }}>
+      VG
+    </span>
+    <span
+      className="logo-lg"
+      style={{
+        color: "#28a745",
+        fontWeight: "700",
+        fontSize: "22px",
+      }}
+    >
+      Vegga Fresh
+    </span>
+  </Link>
+</div>
 
             <Button size="sm" color="none" type="button" onClick={toggleMenu} className="px-3 font-size-24 header-item waves-effect" id="vertical-menu-btn">
               <i className="ri-menu-2-line align-middle"></i>

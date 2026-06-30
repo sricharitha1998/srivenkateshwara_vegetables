@@ -105,6 +105,10 @@ import ListCategories from "../pages/Categories/listCategories";
 import AddProduct from "../pages/products/addProduct";
 import ListProducts from "../pages/products/listProducts";
 import ListOrders from "../pages/Orders/listOrders";
+import ListBanners from "../pages/Banners/listBanners";
+import AddBanner from "../pages/Banners/addBanner";
+import AddDeliveryBoy from "../pages/DeliveryBoys/addDeliveryBoy";
+import ListDeliveryBoys from "../pages/DeliveryBoys/listDeliveryBoys";
 
 const authProtectedRoutes = [
 
@@ -126,6 +130,15 @@ const authProtectedRoutes = [
 
 	//orders
 	{ path: "/list-orders", component: <ListOrders /> },
+
+	//banners
+	{ path: "/list-banners", component: <ListBanners /> },
+	{ path: "/add-banner", component: <AddBanner /> },
+	{ path: "/update-banner/:id", component: <AddBanner /> },
+
+	//delivery boys
+	{ path: "/add-delivery-boy", component: <AddDeliveryBoy /> },
+	{ path: "/list-delivery-boys", component: <ListDeliveryBoys /> },
 
 	// Tables
 	{ path: "/basic-tables", component: <BasicTables /> },

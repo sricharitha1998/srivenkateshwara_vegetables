@@ -19,6 +19,10 @@ import ProductDetail from './pages/products/productView'
 import ListUsers from './pages/users/list'
 import ListOrders from './pages/Orders/listOrders'
 import ListPayments from "./pages/payments/listPayments";
+import ListBanners from './pages/Banners/listBanners'
+import AddBanner from './pages/Banners/addBanner'
+import AddDeliveryBoy from './pages/DeliveryBoys/addDeliveryBoy'
+import ListDeliveryBoys from './pages/DeliveryBoys/listDeliveryBoys'
 import AuthRoute from "./routes/AuthRoute";
 import PrivateRoute from "./routes/PrivateRoute";
 
@@ -219,6 +223,61 @@ function App() {
           <PrivateRoute>
             <Layout>
               <ListOrders />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+
+<Route
+        path="/add-banner"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <AddBanner />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+
+<Route
+        path="/list-banners"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <ListBanners />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+
+<Route
+        path="/update-banner/:id"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <AddBanner />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+
+<Route
+        path="/add-delivery-boy"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <AddDeliveryBoy />
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+
+<Route
+        path="/list-delivery-boys"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <ListDeliveryBoys />
             </Layout>
           </PrivateRoute>
         }

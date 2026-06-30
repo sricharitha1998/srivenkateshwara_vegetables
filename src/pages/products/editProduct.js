@@ -5,6 +5,7 @@ import {
   TabContent, TabPane, Form, Alert
 } from "reactstrap";
 import Dropzone from "react-dropzone";
+import imageCompression from "browser-image-compression";
 import classnames from "classnames";
 import Select from "react-select";
 import { customSelectStyles } from "../../helpers/customStyles";
@@ -31,6 +32,8 @@ const EditProduct = () => {
     { label: "Piece (pc)", value: "pc" },
   ];
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [imageError, setImageError] = useState("");
   const [formValues, setFormValues] = useState({
     name: "",
     category: "",
@@ -166,14 +169,40 @@ const EditProduct = () => {
     setVariants(updated);
   };
 
-  const handleAcceptedFiles = (files) => {
-    const updatedFiles = files.map((file) =>
-      Object.assign(file, {
-        preview: URL.createObjectURL(file),
-        formattedSize: formatBytes(file.size),
-      })
-    );
-    setSelectedFiles([...selectedFiles, ...updatedFiles]);
+  const handleAcceptedFiles = async (files) => {
+    setImageError("");
+    setIsCompressing(true);
+
+    const compressionOptions = {
+    maxSizeMB: 0.25,
+    maxWidthOrHeight: 800,
+    useWebWorker: true,
+    initialQuality: 0.75,
+};
+
+    try {
+      const compressedFiles = await Promise.all(
+        files.map(async (file) => {
+          const compressedFile = await imageCompression(file, compressionOptions);
+          const imageFile =
+            compressedFile instanceof File
+              ? compressedFile
+              : new File([compressedFile], file.name, { type: compressedFile.type || file.type });
+
+          return Object.assign(imageFile, {
+            preview: URL.createObjectURL(imageFile),
+            formattedSize: formatBytes(imageFile.size),
+          });
+        })
+      );
+
+      setSelectedFiles((prev) => [...prev, ...compressedFiles]);
+    } catch (err) {
+      console.error("Image compression failed:", err);
+      setImageError("Unable to compress one or more images. Please try different images.");
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const formatBytes = (bytes, decimals = 2) => {
@@ -420,14 +449,15 @@ const EditProduct = () => {
                   </Row>
                   {/* Images Upload */}
                   <CardTitle tag="h5" className="mt-4">Upload Images</CardTitle>
-                  <Dropzone onDrop={handleAcceptedFiles}>
+                  {imageError && <Alert color="danger">{imageError}</Alert>}
+                  <Dropzone onDrop={handleAcceptedFiles} accept="image/*" multiple>
                     {({ getRootProps, getInputProps }) => (
                       <div className="dropzone">
                         <div className="dz-message needsclick mt-2" {...getRootProps()}>
                           <input {...getInputProps()} />
                           <div>
                             <i className="display-4 text-muted bx bx-cloud-upload" />
-                            <h5>Drop files here or click to upload.</h5>
+                            <h5>{isCompressing ? "Compressing images..." : "Drop files here or click to upload."}</h5>
                           </div>
                         </div>
                       </div>
@@ -437,8 +467,8 @@ const EditProduct = () => {
 
                   {/* Submit */}
                   <div className="text-end mt-4">
-                    <Button color="success" type="submit" disabled={loading}>
-                      {loading ? <i className="bx bx-loader bx-spin font-size-16 align-middle me-2"></i> : null}
+                    <Button color="success" type="submit" disabled={loading || isCompressing}>
+                      {loading || isCompressing ? <i className="bx bx-loader bx-spin font-size-16 align-middle me-2"></i> : null}
                       Update Product
                     </Button>
                   </div>

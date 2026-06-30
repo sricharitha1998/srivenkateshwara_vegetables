@@ -48,7 +48,7 @@ class Login extends Component {
                                                             </Link>
                                                         </div>
                                                         <h4 className="font-size-18 mt-4">Welcome Back!</h4>
-                                                        <p className="text-muted">Sign in to continue to Nazox.</p>
+                                                        <p className="text-muted">Log in to continue to Admin Vegga Fresh</p>
                                                     </div>
 
                                                     <div className="p-2 mt-5">
@@ -109,8 +109,8 @@ class Login extends Component {
                                                     </div>
 
                                                     <div className="mt-5 text-center">
-                                                        <p>Don't have an account? <Link to="/auth-register" className="fw-medium text-primary"> Register </Link> </p>
-                                                        <p>© 2021 Nazox. Crafted with <i className="mdi mdi-heart text-danger"></i> by Themesdesign</p>
+                                                        {/* <p>Don't have an account? <Link to="/auth-register" className="fw-medium text-primary"> Register </Link> </p>
+                                                        <p>© 2021 Nazox. Crafted with <i className="mdi mdi-heart text-danger"></i> by Themesdesign</p> */}
                                                     </div>
                                                 </div>
                                             </Col>
