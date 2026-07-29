@@ -37,11 +37,9 @@ const ListOrders = () => {
   const [selectedDeliverySlot, setSelectedDeliverySlot] = useState(null);
 
   // Helper function to get base URL for admin endpoints
-  const getAdminBaseUrl = () => {
-    const apiUrl = process.env.REACT_APP_API_URL;
-    // Remove /api/v1 suffix if present
-    return apiUrl.replace(/\/api\/v1\/?$/, "");
-  };
+ const getAdminBaseUrl = () => {
+  return process.env.REACT_APP_API_URL;
+};
 
   const fetchDeliveryPersons = async () => {
     setDeliveryPersonsLoading(true);
@@ -96,14 +94,15 @@ const ListOrders = () => {
     try {
       const userData = JSON.parse(localStorage.getItem("user"));
       const accessToken = userData?.access;
-      const baseUrl = getAdminBaseUrl();
-
-      const response = await fetch(`${baseUrl}/admin/delivery-slots/`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+  `${process.env.REACT_APP_API_URL}/admin/delivery-slots/`,
+  {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
       if (response.ok) {
         const result = await response.json();
         const slots = Array.isArray(result?.data?.results)
@@ -112,56 +111,86 @@ const ListOrders = () => {
             ? result.data
             : [];
         setDeliverySlots(slots);
+console.log("Delivery Slots =>", slots);
+
+       return slots;
       } else {
         console.error("Failed to fetch delivery slots");
+        return [];
       }
     } catch (err) {
-      console.error("Error fetching delivery slots:", err);
+     console.error("Error fetching delivery slots:", err);
+      return [];
     }
-  };
+  }; 
 
-  const toggleModal = (order = null) => {
+
+  const toggleModal = async (order = null) => {
+
     if (!modal) {
-      fetchDeliveryPersons();
-      fetchDeliverySlots();
-      setIsNameInput(false);
-      setIsMobileInput(false);
-      setSelectedDeliveryDate("");
-      setSelectedDeliverySlot(null);
-      if (!isAddMode) {
-        setDeliveryInfo((prev) => ({ ...prev, trackingLink: "" }));
-      } else {
-        setDeliveryInfo({ name: "", mobile: "", trackingLink: "", id: "" });
-      }
+        await fetchDeliveryPersons();
+        const slots = await fetchDeliverySlots();
+
+        setIsNameInput(false);
+        setIsMobileInput(false);
+        setSelectedDeliveryDate("");
+        setSelectedDeliverySlot(null);
+
+        if (!isAddMode) {
+            setDeliveryInfo(prev => ({
+                ...prev,
+                trackingLink: ""
+            }));
+        } else {
+            setDeliveryInfo({
+                name: "",
+                mobile: "",
+                trackingLink: "",
+                id: ""
+            });
+        }
     }
 
     if (order) {
-      setAssignOrderId(order.id);
 
-      // Pre-populate delivery slot and date from order
-      if (order.delivery_slot || order.delivery_slot_id) {
-        setSelectedDeliverySlot(order.delivery_slot?.id || order.delivery_slot_id);
-      }
-      if (order.delivery_date) {
-        setSelectedDeliveryDate(order.delivery_date);
-      }
+        console.log("ORDER", order);
 
-      // try to prefill delivery person if present on order
-      const dp = order.delivery_person;
-      if (dp && typeof dp === "object") {
-        setDeliveryInfo((prev) => ({ ...prev, name: dp.name || prev.name, mobile: dp.mobile || prev.mobile, id: dp.id || prev.id }));
-      } else if (typeof dp === "string") {
-        setDeliveryInfo((prev) => ({ ...prev, name: dp, id: "" }));
-      } else {
-        setDeliveryInfo((prev) => ({ ...prev, id: "" }));
-      }
+        setAssignOrderId(order.order_id);
+        setSelectedOrder(order);
+        if (order.delivery_date) {
+            setSelectedDeliveryDate(order.delivery_date);
+        }
+
+        const dp = order.delivery_person;
+
+        if (dp && typeof dp === "object") {
+            setDeliveryInfo(prev => ({
+                ...prev,
+                name: dp.name || "",
+                mobile: dp.mobile || "",
+                id: dp.id || ""
+            }));
+        } else if (typeof dp === "string") {
+            setDeliveryInfo(prev => ({
+                ...prev,
+                name: dp,
+                id: ""
+            }));
+        } else {
+            setDeliveryInfo(prev => ({
+                ...prev,
+                id: ""
+            }));
+        }
+
+        
+
     } else {
-      setAssignOrderId(null);
+        setAssignOrderId(null);
     }
 
     setModal(!modal);
-  };
-
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -361,10 +390,12 @@ const ListOrders = () => {
       const baseUrl = getAdminBaseUrl();
       const assignPayload = {
         order_id: String(assignOrderId),
-        delivery_slot_id: Number(selectedDeliverySlot),
+        delivery_slot_id: Number(selectedDeliverySlot.id),
         delivery_person_id: Number(deliveryPersonId),
         delivery_date: selectedDeliveryDate,
       };
+      console.log("Assign Payload", assignPayload);
+console.log("Selected Delivery Slot", selectedDeliverySlot);
 
       const assignResponse = await fetchWithAuth(`${baseUrl}/admin/assign-delivery/`, {
         method: "POST",
@@ -381,6 +412,7 @@ const ListOrders = () => {
           await fetchOrders(selectedFilter, currentPage, perPage);
         }
         toggleModal();
+        
       } else {
         const errorData = await assignResponse.json();
         console.error("Assignment error:", errorData);
@@ -488,8 +520,18 @@ const ListOrders = () => {
   }, [currentPage, perPage]);
 
   useEffect(() => {
-    fetchStatus();
-  }, []);
+    if (!modal || !selectedOrder || deliverySlots.length === 0) return;
+
+    const slot = deliverySlots.find(
+    s =>
+        Number(s.id) === Number(selectedOrder.delivery_schedule_id) ||
+        s.name === selectedOrder.delivery_slot_name
+);
+
+if (slot) {
+    setSelectedDeliverySlot(slot);
+}
+}, [modal, selectedOrder, deliverySlots]);
 
   const columns = useMemo(() => [
     {
@@ -700,7 +742,7 @@ const ListOrders = () => {
                 <strong>Final Amount:</strong> {selectedOrder.final_amount || selectedOrder.payment_amount}
               </div>
               <div className="mb-3">
-                <strong>Delivery Person:</strong> {selectedOrder.delivery_person || "Not assigned"}
+                <strong>Delivery Person:</strong> {selectedOrder.delivery_person?.name || "Not assigned"}
               </div>
 
               <div className="mb-3">
@@ -922,13 +964,15 @@ const ListOrders = () => {
           <FormGroup>
             <Label for="deliverySlot">Delivery Slot</Label>
             <Input
-              type="text"
-              name="deliverySlot"
-              id="deliverySlot"
-              value={selectedDeliverySlot ? (deliverySlots.find(s => s.id == selectedDeliverySlot)?.name || deliverySlots.find(s => s.id == selectedDeliverySlot)?.start_time) || "" : ""}
-              disabled
-              placeholder="No delivery slot assigned"
-            />
+  type="text"
+  id="deliverySlot"
+  value={
+    selectedDeliverySlot
+      ? `${selectedDeliverySlot.name} (${selectedDeliverySlot.start_time} - ${selectedDeliverySlot.end_time})`
+      : "No delivery slot assigned"
+  }
+  disabled
+/>
           </FormGroup>
           <FormGroup>
             <Label for="deliveryDate">Delivery Date</Label>
