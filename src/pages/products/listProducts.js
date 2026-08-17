@@ -25,6 +25,8 @@ const ListProducts = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchText, setSearchText] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [subcategoryFilter, setSubcategoryFilter] = useState("all");
 
   const user = useMemo(() => JSON.parse(localStorage.getItem("user")) || {}, []);
   const userInfo = user?.user || {};
@@ -42,6 +44,31 @@ const ListProducts = () => {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
   });
+
+  const formatLastUpdated = (value) => {
+    if (!value) return "N/A";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const sortProductsByLatestUpdate = (items = []) =>
+    [...items].sort((a, b) => {
+      const dateA = new Date(
+  a?.last_updated_date || a?.last_updated || a?.updated_at || 0
+).getTime();
+
+const dateB = new Date(
+  b?.last_updated_date || b?.last_updated || b?.updated_at || 0
+).getTime();
+      return dateB - dateA;
+    });
 
   const refreshToken = async (refresh) => {
     const response = await fetch(`${API_BASE}/token/refresh/`, {
@@ -79,9 +106,14 @@ const ListProducts = () => {
       const response = await makeAuthenticatedRequest(`${API_BASE}/products/?page_no=${page}&page_size=${limit}&search=${search}`);
       if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
       const result = await response.json();
-      const items = Array.isArray(result?.data?.results) ? result.data.results : (Array.isArray(result?.data?.data) ? result?.data?.data : (Array.isArray(result?.data) ? result.data : []));
-      const count = result?.data?.count ?? result?.count ?? result?.data?.total ?? result?.total ?? result?.data?.total_rows ?? items.length;
-      setData(items);
+      const items = Array.isArray(result?.data?.results)
+        ? result.data.results
+        : (Array.isArray(result?.data?.data)
+          ? result?.data?.data
+          : (Array.isArray(result?.data) ? result.data : []));
+      const sortedItems = sortProductsByLatestUpdate(items);
+      const count = result?.data?.count ?? result?.count ?? result?.data?.total ?? result?.total ?? result?.data?.total_rows ?? sortedItems.length;
+      setData(sortedItems);
       setTotalRows(count);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -143,6 +175,35 @@ const ListProducts = () => {
     setCurrentPage(1);
   };
 
+  const categoryOptions = useMemo(
+    () => [...new Set(data.map((row) => row.category_name).filter(Boolean))],
+    [data]
+  );
+
+  const subcategoryOptions = useMemo(
+    () => [...new Set(data.map((row) => row.subcategory_name).filter(Boolean))],
+    [data]
+  );
+
+  const filteredProducts = useMemo(() => {
+    return sortProductsByLatestUpdate(
+      data.filter((row) => {
+        const matchesCategory =
+          categoryFilter === "all" || row.category_name === categoryFilter;
+        const matchesSubcategory =
+          subcategoryFilter === "all" || row.subcategory_name === subcategoryFilter;
+        return matchesCategory && matchesSubcategory;
+      })
+    );
+  }, [data, categoryFilter, subcategoryFilter]);
+
+  const effectiveTotalRows =
+    categoryFilter === "all" && subcategoryFilter === "all"
+      ? totalRows
+      : filteredProducts.length;
+
+  const displayData = filteredProducts;
+
   const columns = useMemo(() => [
     {
       name: "No.",
@@ -151,7 +212,7 @@ const ListProducts = () => {
     },
     {
       name: "Product Name",
-      selector: row => row.name,
+      selector: (row) => row.name,
       sortable: true,
       cell: (row) => (
         <Button color="link" onClick={() => openProductModal(row)}>
@@ -160,10 +221,30 @@ const ListProducts = () => {
       ),
     },
     {
-      name: "Brand",
-      selector: row => row.brand,
+      name: "Category",
+      selector: (row) => row.category_name || "N/A",
       sortable: true,
     },
+    {
+      name: "Sub Category",
+      selector: (row) => row.subcategory_name || "N/A",
+      sortable: true,
+    },
+   {
+  name: "Last Updated",
+  selector: (row) =>
+    row.last_updated_date ||
+    row.last_updated ||
+    row.updated_at ||
+    "N/A",
+  sortable: true,
+  cell: (row) =>
+    formatLastUpdated(
+      row.last_updated_date ||
+      row.last_updated ||
+      row.updated_at
+    ),
+},
     (canEdit || canDelete) && {
       name: "Actions",
       cell: (row) => (
@@ -184,11 +265,15 @@ const ListProducts = () => {
       allowOverflow: true,
       button: true,
     },
-  ].filter(Boolean), [canEdit, canDelete, openProductModal]);
+  ].filter(Boolean), [canEdit, canDelete, openProductModal, currentPage, perPage]);
 
   useEffect(() => {
     fetchProducts(currentPage, perPage, searchText);
   }, [currentPage, perPage, searchText]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [categoryFilter, subcategoryFilter]);
 
   return (
     <div className="page-content">
@@ -207,10 +292,36 @@ const ListProducts = () => {
                   )}
                 </div>
 
-                <div className="d-flex justify-content-end mb-3">
+                <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                  <div className="d-flex gap-2 flex-wrap">
+                    <select
+                      className="form-select"
+                      value={categoryFilter}
+                      onChange={(e) => setCategoryFilter(e.target.value)}
+                      style={{ minWidth: "150px" }}
+                    >
+                      <option value="all">All Categories</option>
+                      {categoryOptions.map((category) => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
+
+                    <select
+                      className="form-select"
+                      value={subcategoryFilter}
+                      onChange={(e) => setSubcategoryFilter(e.target.value)}
+                      style={{ minWidth: "170px" }}
+                    >
+                      <option value="all">All Subcategories</option>
+                      {subcategoryOptions.map((subcategory) => (
+                        <option key={subcategory} value={subcategory}>{subcategory}</option>
+                      ))}
+                    </select>
+                  </div>
+
                   <input
                     type="text"
-                    className="form-control w-25"
+                    className="form-control w-25 min-width-220"
                     placeholder="Search Product..."
                     value={searchText}
                     onChange={handleSearch}
@@ -220,10 +331,10 @@ const ListProducts = () => {
                 {/* Data Table handles own loading state */}
                 <DataTable
                   columns={columns}
-                  data={data}
+                  data={displayData}
                   pagination
                   paginationServer
-                  paginationTotalRows={totalRows}
+                  paginationTotalRows={effectiveTotalRows}
                   paginationPerPage={perPage}
                   progressPending={loading}
                   progressComponent={<div className="my-3 text-center"><Spinner color="primary" /></div>}
