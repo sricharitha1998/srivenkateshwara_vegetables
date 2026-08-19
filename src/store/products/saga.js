@@ -81,7 +81,7 @@ function* addProduct({ payload: { productData, navigate } }) {
     }
 }
 
-function* updateProduct({ payload: { id, productData, navigate } }) {
+function* updateProduct({ payload: { id, productData, navigate, page } }) {
     try {
         const formDataBody = new FormData();
         if (productData.name) formDataBody.append("name", productData.name);
@@ -144,7 +144,7 @@ function* updateProduct({ payload: { id, productData, navigate } }) {
         }
 
         yield put(updateProductSuccess(responseData));
-        if (navigate) navigate("/list-products");
+        if (navigate) navigate(`/list-products?page=${page || 1}`);
 
     } catch (error) {
         const errorMsg = (error.response?.status === 400 || error.response?.data?.status_code === 400)

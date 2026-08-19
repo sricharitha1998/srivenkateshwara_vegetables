@@ -22,9 +22,9 @@ export const addProductFail = (error) => ({
     payload: error,
 });
 
-export const updateProduct = (id, productData, navigate) => ({
+export const updateProduct = (id, productData, navigate, page) => ({
     type: UPDATE_PRODUCT,
-    payload: { id, productData, navigate },
+    payload: { id, productData, navigate, page },
 });
 
 export const updateProductSuccess = (data) => ({

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Card,
   CardBody,
@@ -12,13 +12,15 @@ import {
   Spinner,
 } from "reactstrap";
 import Breadcrumbs from "../../components/Common/Breadcrumb";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import DataTable from "react-data-table-component";
 
 const ListProducts = () => {
   const API_BASE = process.env.REACT_APP_API_URL;
+  const location = useLocation();
+  const pageFromUrl = Number(new URLSearchParams(location.search).get("page"));
   const [data, setData] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(pageFromUrl > 0 ? pageFromUrl : 1);
   const [perPage, setPerPage] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -27,6 +29,7 @@ const ListProducts = () => {
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [subcategoryFilter, setSubcategoryFilter] = useState("all");
+  const filtersMounted = useRef(false);
 
   const user = useMemo(() => JSON.parse(localStorage.getItem("user")) || {}, []);
   const userInfo = user?.user || {};
@@ -250,7 +253,7 @@ const dateB = new Date(
       cell: (row) => (
         <>
           {canEdit && (
-            <Link to={`/update-product/${row.id}`} className="me-3 text-primary">
+            <Link to={`/update-product/${row.id}?page=${currentPage}`} className="me-3 text-primary">
               <i className="mdi mdi-pencil font-size-18" />
             </Link>
           )}
@@ -272,6 +275,10 @@ const dateB = new Date(
   }, [currentPage, perPage, searchText]);
 
   useEffect(() => {
+    if (!filtersMounted.current) {
+      filtersMounted.current = true;
+      return;
+    }
     setCurrentPage(1);
   }, [categoryFilter, subcategoryFilter]);
 
@@ -336,6 +343,7 @@ const dateB = new Date(
                   paginationServer
                   paginationTotalRows={effectiveTotalRows}
                   paginationPerPage={perPage}
+                  paginationDefaultPage={currentPage}
                   progressPending={loading}
                   progressComponent={<div className="my-3 text-center"><Spinner color="primary" /></div>}
                   onChangePage={(page) => setCurrentPage(page)}

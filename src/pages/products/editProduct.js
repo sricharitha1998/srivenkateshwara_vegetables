@@ -9,7 +9,7 @@ import imageCompression from "browser-image-compression";
 import classnames from "classnames";
 import Select from "react-select";
 import { customSelectStyles } from "../../helpers/customStyles";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import Breadcrumb from "../../components/Common/Breadcrumb";
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
@@ -19,7 +19,9 @@ import { useNavigate } from "react-router-dom";
 
 const EditProduct = () => {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
+  const page = new URLSearchParams(location.search).get("page") || "1";
   const breadcrumbItems = [
     { title: "Product", link: "#" },
     { title: "Edit Product", link: "#" },
@@ -236,7 +238,7 @@ const EditProduct = () => {
       images: selectedFiles.filter(f => !f.formattedSize || f.formattedSize !== "Existing")
     };
 
-    dispatch(updateProduct(id, plainData, navigate));
+    dispatch(updateProduct(id, plainData, navigate, page));
   };
 
   const handleImageDelete = (index) => {

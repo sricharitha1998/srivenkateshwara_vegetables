@@ -19,14 +19,16 @@ import { customSelectStyles } from "../../helpers/customStyles";
 import Dropzone from "react-dropzone";
 import imageCompression from "browser-image-compression";
 import Breadcrumb from "../../components/Common/Breadcrumb";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { addProduct, updateProduct } from "../../store/actions";
 
 const AddProduct = () => {
   const { id } = useParams();
+  const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const page = new URLSearchParams(location.search).get("page") || "1";
 
   const isEdit = !!id;
 
@@ -241,7 +243,7 @@ const AddProduct = () => {
     };
 
     if (isEdit) {
-      dispatch(updateProduct(id, payload, navigate));
+      dispatch(updateProduct(id, payload, navigate, page));
     } else {
       dispatch(addProduct(payload, navigate));
     }
