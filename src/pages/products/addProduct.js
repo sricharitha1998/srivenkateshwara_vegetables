@@ -10,7 +10,11 @@ import {
   Label,
   Row,
   Form,
-  Alert
+  Alert,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter
 } from "reactstrap";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
@@ -70,6 +74,7 @@ const AddProduct = () => {
   const [subcategories, setSubcategories] = useState([]);
   const [isCompressing, setIsCompressing] = useState(false);
   const [imageError, setImageError] = useState("");
+  const [successModal, setSuccessModal] = useState(false);
 
   const { loading, error } = useSelector((state) => ({
     loading: state.Products?.loading || false,
@@ -243,9 +248,9 @@ const AddProduct = () => {
     };
 
     if (isEdit) {
-      dispatch(updateProduct(id, payload, navigate, page));
+      dispatch(updateProduct(id, payload, navigate, page, () => setSuccessModal(true)));
     } else {
-      dispatch(addProduct(payload, navigate));
+      dispatch(addProduct(payload, navigate, () => setSuccessModal(true)));
     }
   };
 
@@ -453,6 +458,20 @@ const AddProduct = () => {
           </Col>
         </Row>
       </Container>
+      <Modal isOpen={successModal} centered>
+        <ModalHeader>{isEdit ? "Product Updated" : "Product Added"}</ModalHeader>
+        <ModalBody>
+          {isEdit ? "The product was updated successfully." : "The product was added successfully."}
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            color="success"
+            onClick={() => navigate(`/list-products${isEdit ? `?page=${page}` : ""}`)}
+          >
+            Continue
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 };

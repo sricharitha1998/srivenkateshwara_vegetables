@@ -7,9 +7,9 @@ import {
     UPDATE_PRODUCT_FAIL
 } from "./actionTypes";
 
-export const addProduct = (productData, navigate) => ({
+export const addProduct = (productData, navigate, onSuccess) => ({
     type: ADD_PRODUCT,
-    payload: { productData, navigate },
+    payload: { productData, navigate, onSuccess },
 });
 
 export const addProductSuccess = (data) => ({
@@ -22,9 +22,9 @@ export const addProductFail = (error) => ({
     payload: error,
 });
 
-export const updateProduct = (id, productData, navigate, page) => ({
+export const updateProduct = (id, productData, navigate, page, onSuccess) => ({
     type: UPDATE_PRODUCT,
-    payload: { id, productData, navigate, page },
+    payload: { id, productData, navigate, page, onSuccess },
 });
 
 export const updateProductSuccess = (data) => ({

@@ -8,6 +8,7 @@ import {
   Modal,
   ModalHeader,
   ModalBody,
+  ModalFooter,
   Button,
   Spinner,
 } from "reactstrap";
@@ -26,6 +27,8 @@ const ListProducts = () => {
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [subcategoryFilter, setSubcategoryFilter] = useState("all");
@@ -157,8 +160,6 @@ const dateB = new Date(
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) return;
-
     try {
       const response = await makeAuthenticatedRequest(
         `${API_BASE}/products/${id}/`,
@@ -166,7 +167,9 @@ const dateB = new Date(
       );
 
       if (!response.ok) throw new Error(`Delete failed: ${response.status}`);
-      fetchProducts();
+      setProductToDelete(null);
+      setDeleteSuccess(true);
+      fetchProducts(currentPage, perPage, searchText);
     } catch (err) {
       console.error("Delete error:", err.message);
       alert("Failed to delete product.");
@@ -258,7 +261,14 @@ const dateB = new Date(
             </Link>
           )}
           {canDelete && (
-            <Link to="#" className="text-danger" onClick={() => handleDelete(row.id)}>
+            <Link
+              to="#"
+              className="text-danger"
+              onClick={(event) => {
+                event.preventDefault();
+                setProductToDelete(row);
+              }}
+            >
               <i className="mdi mdi-trash-can font-size-18" />
             </Link>
           )}
@@ -402,6 +412,25 @@ const dateB = new Date(
             </Col>
           </Row>
         </ModalBody>
+      </Modal>
+
+      <Modal isOpen={Boolean(productToDelete)} toggle={() => setProductToDelete(null)} centered>
+        <ModalHeader toggle={() => setProductToDelete(null)}>Delete Product</ModalHeader>
+        <ModalBody>
+          Are you sure you want to delete <strong>{productToDelete?.name}</strong>?
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={() => setProductToDelete(null)}>Cancel</Button>
+          <Button color="danger" onClick={() => handleDelete(productToDelete.id)}>Delete</Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={deleteSuccess} toggle={() => setDeleteSuccess(false)} centered>
+        <ModalHeader toggle={() => setDeleteSuccess(false)}>Product Deleted</ModalHeader>
+        <ModalBody>The product was deleted successfully.</ModalBody>
+        <ModalFooter>
+          <Button color="success" onClick={() => setDeleteSuccess(false)}>Continue</Button>
+        </ModalFooter>
       </Modal>
     </div>
   );

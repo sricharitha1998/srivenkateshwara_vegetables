@@ -11,6 +11,10 @@ import {
   Row,
   Col,
   Alert,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
 } from "reactstrap";
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 
@@ -22,6 +26,7 @@ const AddDeliveryBoy = () => {
   });
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [successModal, setSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const getAuthHeaders = () => {
@@ -118,11 +123,8 @@ const AddDeliveryBoy = () => {
 
       const result = await response.json();
       console.log("Delivery boy created:", result);
-      setSuccess("Delivery boy added successfully!");
+      setSuccessModal(true);
       setFormData({ name: "", mobile: "" });
-      setTimeout(() => {
-        navigate("/list-delivery-boys");
-      }, 1500);
     } catch (err) {
       const errorMsg = err?.message || "Failed to add delivery boy";
       setError(errorMsg);
@@ -210,6 +212,15 @@ const AddDeliveryBoy = () => {
           </Card>
         </Container>
       </div>
+      <Modal isOpen={successModal} centered>
+        <ModalHeader>Delivery Boy Added</ModalHeader>
+        <ModalBody>Delivery boy added successfully.</ModalBody>
+        <ModalFooter>
+          <Button color="success" onClick={() => navigate("/list-delivery-boys")}>
+            Continue
+          </Button>
+        </ModalFooter>
+      </Modal>
     </React.Fragment>
   );
 };

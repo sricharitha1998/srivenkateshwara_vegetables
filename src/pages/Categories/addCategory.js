@@ -10,7 +10,11 @@ import {
   Row,
   Form,
   Spinner,
-  Alert
+  Alert,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter
 } from "reactstrap";
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 import { useNavigate } from "react-router-dom";
@@ -35,6 +39,7 @@ const AddCategory = () => {
   const [formData, setFormData] = useState({ name: "" });
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [successModal, setSuccessModal] = useState(false);
 
   const handleNameChange = (e) => {
     setFormData({ name: e.target.value });
@@ -58,7 +63,7 @@ const AddCategory = () => {
       image: imageFile
     };
 
-    dispatch(addCategory(plainData, navigate));
+    dispatch(addCategory(plainData, navigate, () => setSuccessModal(true)));
   };
 
   return (
@@ -125,6 +130,15 @@ const AddCategory = () => {
           </Col>
         </Row>
       </Container>
+      <Modal isOpen={successModal} centered>
+        <ModalHeader>Category Added</ModalHeader>
+        <ModalBody>Category added successfully.</ModalBody>
+        <ModalFooter>
+          <Button color="success" onClick={() => navigate("/list-category")}>
+            Continue
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 };

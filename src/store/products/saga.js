@@ -22,7 +22,7 @@ const refreshAccessToken = async (refreshToken) => {
     return data.access;
 };
 
-function* addProduct({ payload: { productData, navigate } }) {
+function* addProduct({ payload: { productData, navigate, onSuccess } }) {
     try {
         const formDataBody = new FormData();
         formDataBody.append("name", productData.name);
@@ -71,7 +71,8 @@ function* addProduct({ payload: { productData, navigate } }) {
         }
 
         yield put(addProductSuccess(responseData));
-        if (navigate) navigate("/list-products");
+        if (onSuccess) onSuccess();
+        else if (navigate) navigate("/list-products");
 
     } catch (error) {
         const errorMsg = (error.response?.status === 400 || error.response?.data?.status_code === 400)
@@ -81,7 +82,7 @@ function* addProduct({ payload: { productData, navigate } }) {
     }
 }
 
-function* updateProduct({ payload: { id, productData, navigate, page } }) {
+function* updateProduct({ payload: { id, productData, navigate, page, onSuccess } }) {
     try {
         const formDataBody = new FormData();
         if (productData.name) formDataBody.append("name", productData.name);
@@ -144,7 +145,8 @@ function* updateProduct({ payload: { id, productData, navigate, page } }) {
         }
 
         yield put(updateProductSuccess(responseData));
-        if (navigate) navigate(`/list-products?page=${page || 1}`);
+        if (onSuccess) onSuccess();
+        else if (navigate) navigate(`/list-products?page=${page || 1}`);
 
     } catch (error) {
         const errorMsg = (error.response?.status === 400 || error.response?.data?.status_code === 400)

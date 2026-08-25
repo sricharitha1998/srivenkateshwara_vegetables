@@ -1,5 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Card, CardBody, Col, Container, Row, Spinner } from "reactstrap";
+import {
+  Card,
+  CardBody,
+  Col,
+  Container,
+  Row,
+  Spinner,
+  Button,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "reactstrap";
 import { Link } from "react-router-dom";
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 import DataTable from "react-data-table-component";
@@ -13,6 +25,8 @@ const ListSubCategories = () => {
   const [totalRows, setTotalRows] = useState(0);
   const [pending, setPending] = useState(true);
   const [searchText, setSearchText] = useState("");
+  const [subCategoryToDelete, setSubCategoryToDelete] = useState(null);
+  const [successModal, setSuccessModal] = useState(false);
 
   const user = useMemo(() => JSON.parse(localStorage.getItem("user")) || {}, []);
   const userInfo = user?.user || {};
@@ -83,8 +97,6 @@ const ListSubCategories = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this category?")) return;
-
     try {
       const response = await makeAuthenticatedRequest(
         `${API_BASE}/subcategories/${id}/`,
@@ -93,7 +105,9 @@ const ListSubCategories = () => {
 
       if (!response.ok) throw new Error(`Delete failed: ${response.status}`);
 
-      fetchCategories(); // Refresh list after delete
+      setSubCategoryToDelete(null);
+      setSuccessModal(true);
+      fetchCategories(currentPage, perPage, searchText);
     } catch (err) {
       console.error("Delete error:", err.message);
       alert("Failed to delete category.");
@@ -139,7 +153,10 @@ const ListSubCategories = () => {
               <Link
                 to="#"
                 className="text-danger"
-                onClick={() => handleDelete(row.id)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setSubCategoryToDelete(row);
+                }}
               >
                 <i className="mdi mdi-trash-can font-size-18" />
               </Link>
@@ -206,6 +223,25 @@ const ListSubCategories = () => {
           </Col>
         </Row>
       </Container>
+
+      <Modal isOpen={Boolean(subCategoryToDelete)} toggle={() => setSubCategoryToDelete(null)} centered>
+        <ModalHeader toggle={() => setSubCategoryToDelete(null)}>Delete Sub Category</ModalHeader>
+        <ModalBody>
+          Are you sure you want to delete <strong>{subCategoryToDelete?.name}</strong>?
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={() => setSubCategoryToDelete(null)}>Cancel</Button>
+          <Button color="danger" onClick={() => handleDelete(subCategoryToDelete.id)}>Delete</Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={successModal} toggle={() => setSuccessModal(false)} centered>
+        <ModalHeader toggle={() => setSuccessModal(false)}>Sub Category Deleted</ModalHeader>
+        <ModalBody>Sub category deleted successfully.</ModalBody>
+        <ModalFooter>
+          <Button color="success" onClick={() => setSuccessModal(false)}>Continue</Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 };

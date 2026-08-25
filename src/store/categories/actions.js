@@ -7,9 +7,9 @@ import {
     UPDATE_CATEGORY_FAIL
 } from "./actionTypes";
 
-export const addCategory = (categoryData, navigate) => ({
+export const addCategory = (categoryData, navigate, onSuccess) => ({
     type: ADD_CATEGORY,
-    payload: { categoryData, navigate },
+    payload: { categoryData, navigate, onSuccess },
 });
 
 export const addCategorySuccess = (data) => ({
@@ -22,9 +22,9 @@ export const addCategoryFail = (error) => ({
     payload: error,
 });
 
-export const updateCategory = (id, categoryData, navigate) => ({
+export const updateCategory = (id, categoryData, navigate, onSuccess) => ({
     type: UPDATE_CATEGORY,
-    payload: { id, categoryData, navigate },
+    payload: { id, categoryData, navigate, onSuccess },
 });
 
 export const updateCategorySuccess = (data) => ({

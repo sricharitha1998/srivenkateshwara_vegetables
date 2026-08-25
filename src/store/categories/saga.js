@@ -23,7 +23,7 @@ const refreshAccessToken = async (refreshToken) => {
     return data.access;
 };
 
-function* addCategory({ payload: { categoryData, navigate } }) {
+function* addCategory({ payload: { categoryData, navigate, onSuccess } }) {
     try {
         const formDataBody = new FormData();
         formDataBody.append("name", categoryData.name);
@@ -61,7 +61,8 @@ function* addCategory({ payload: { categoryData, navigate } }) {
         }
         
         yield put(addCategorySuccess(responseData));
-        if (navigate) navigate("/list-category");
+        if (onSuccess) onSuccess();
+        else if (navigate) navigate("/list-category");
         
     } catch (error) {
         const errorMsg = (error.response?.status === 400 || error.response?.data?.status_code === 400)
@@ -71,7 +72,7 @@ function* addCategory({ payload: { categoryData, navigate } }) {
     }
 }
 
-function* updateCategory({ payload: { id, categoryData, navigate } }) {
+function* updateCategory({ payload: { id, categoryData, navigate, onSuccess } }) {
     try {
         const formDataBody = new FormData();
         formDataBody.append("name", categoryData.name);
@@ -108,7 +109,8 @@ function* updateCategory({ payload: { id, categoryData, navigate } }) {
         }
         
         yield put(updateCategorySuccess(responseData));
-        if (navigate) navigate("/list-category");
+        if (onSuccess) onSuccess();
+        else if (navigate) navigate("/list-category");
         
     } catch (error) {
         const errorMsg = (error.response?.status === 400 || error.response?.data?.status_code === 400)

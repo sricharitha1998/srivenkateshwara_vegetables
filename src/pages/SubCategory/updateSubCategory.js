@@ -10,6 +10,10 @@ import {
   Row,
   Form,
   Alert,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
 } from "reactstrap";
 import Select from "react-select";
 import { customSelectStyles } from "../../helpers/customStyles";
@@ -36,6 +40,7 @@ const UpdateSubCategory = () => {
 
   const [imageFile, setImageFile] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
+  const [successModal, setSuccessModal] = useState(false);
 
   const breadcrumbItems = [
     { title: "Sub Category", link: "#" },
@@ -66,7 +71,7 @@ const UpdateSubCategory = () => {
       image: imageFile
     };
 
-    dispatch(updateSubCategory(id, plainData, navigate));
+    dispatch(updateSubCategory(id, plainData, navigate, () => setSuccessModal(true)));
   };
 
   const getUserData = () => JSON.parse(localStorage.getItem("user")) || {};
@@ -254,6 +259,15 @@ const UpdateSubCategory = () => {
           </Col>
         </Row>
       </Container>
+      <Modal isOpen={successModal} centered>
+        <ModalHeader>Sub Category Updated</ModalHeader>
+        <ModalBody>Sub category updated successfully.</ModalBody>
+        <ModalFooter>
+          <Button color="success" onClick={() => navigate("/list-sub-category")}>
+            Continue
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 };

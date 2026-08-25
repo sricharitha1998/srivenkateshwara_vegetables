@@ -11,7 +11,11 @@ import {
   Row,
   Form,
   Alert,
-  Spinner
+  Spinner,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter
 } from "reactstrap";
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 import { useNavigate, useParams } from "react-router-dom";
@@ -74,6 +78,7 @@ const UpdateCategory = () => {
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [existingImage, setExistingImage] = useState(null);
+  const [successModal, setSuccessModal] = useState(false);
 
   useEffect(() => {
     const fetchCategory = async () => {
@@ -121,7 +126,7 @@ const UpdateCategory = () => {
       image: image
     };
 
-    dispatch(updateCategory(id, plainData, navigate));
+    dispatch(updateCategory(id, plainData, navigate, () => setSuccessModal(true)));
   };
 
   return (
@@ -202,6 +207,15 @@ const UpdateCategory = () => {
           </Col>
         </Row>
       </Container>
+      <Modal isOpen={successModal} centered>
+        <ModalHeader>Category Updated</ModalHeader>
+        <ModalBody>Category updated successfully.</ModalBody>
+        <ModalFooter>
+          <Button color="success" onClick={() => navigate("/list-category")}>
+            Continue
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 };

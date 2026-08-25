@@ -22,7 +22,7 @@ const refreshAccessToken = async (refreshToken) => {
     return data.access;
 };
 
-function* addSubCategory({ payload: { subCategoryData, navigate } }) {
+function* addSubCategory({ payload: { subCategoryData, navigate, onSuccess } }) {
     try {
         const formDataBody = new FormData();
         formDataBody.append("category", subCategoryData.categoryType);
@@ -61,7 +61,8 @@ function* addSubCategory({ payload: { subCategoryData, navigate } }) {
         }
         
         yield put(addSubCategorySuccess(responseData));
-        if (navigate) navigate("/list-sub-category");
+        if (onSuccess) onSuccess();
+        else if (navigate) navigate("/list-sub-category");
         
     } catch (error) {
         const errorMsg = (error.response?.status === 400 || error.response?.data?.status_code === 400)
@@ -72,7 +73,7 @@ function* addSubCategory({ payload: { subCategoryData, navigate } }) {
     }
 }
 
-function* updateSubCategory({ payload: { id, subCategoryData, navigate } }) {
+function* updateSubCategory({ payload: { id, subCategoryData, navigate, onSuccess } }) {
     try {
         const formDataBody = new FormData();
         formDataBody.append("category", subCategoryData.categoryType);
@@ -110,7 +111,8 @@ function* updateSubCategory({ payload: { id, subCategoryData, navigate } }) {
         }
         
         yield put(updateSubCategorySuccess(responseData));
-        if (navigate) navigate("/list-sub-category");
+        if (onSuccess) onSuccess();
+        else if (navigate) navigate("/list-sub-category");
         
     } catch (error) {
         const errorMsg = (error.response?.status === 400 || error.response?.data?.status_code === 400)

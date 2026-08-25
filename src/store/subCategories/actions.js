@@ -7,9 +7,9 @@ import {
     UPDATE_SUBCATEGORY_FAIL
 } from "./actionTypes";
 
-export const addSubCategory = (subCategoryData, navigate) => ({
+export const addSubCategory = (subCategoryData, navigate, onSuccess) => ({
     type: ADD_SUBCATEGORY,
-    payload: { subCategoryData, navigate },
+    payload: { subCategoryData, navigate, onSuccess },
 });
 
 export const addSubCategorySuccess = (data) => ({
@@ -22,9 +22,9 @@ export const addSubCategoryFail = (error) => ({
     payload: error,
 });
 
-export const updateSubCategory = (id, subCategoryData, navigate) => ({
+export const updateSubCategory = (id, subCategoryData, navigate, onSuccess) => ({
     type: UPDATE_SUBCATEGORY,
-    payload: { id, subCategoryData, navigate },
+    payload: { id, subCategoryData, navigate, onSuccess },
 });
 
 export const updateSubCategorySuccess = (data) => ({

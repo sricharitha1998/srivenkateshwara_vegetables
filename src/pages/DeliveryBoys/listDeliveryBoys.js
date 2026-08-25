@@ -27,6 +27,8 @@ const ListDeliveryBoys = () => {
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [successModal, setSuccessModal] = useState(false);
+  const [deliveryBoyToDelete, setDeliveryBoyToDelete] = useState(null);
   const [editFormData, setEditFormData] = useState({
     name: "",
     mobile: "",
@@ -154,7 +156,7 @@ const ListDeliveryBoys = () => {
 
     try {
       const response = await fetchWithAuth(
-        `${process.env.REACT_APP_API_URL}/delivery-persons/${editingId}/`,
+        `${process.env.REACT_APP_API_URL}/admin/delivery-persons/${editingId}/`,
         {
           method: "PUT",
           headers: getAuthHeaders(),
@@ -168,6 +170,7 @@ const ListDeliveryBoys = () => {
         throw new Error(errorMsg);
       }
 
+      setSuccessModal(true);
       setSuccess("Delivery boy updated successfully!");
       setEditModal(false);
       await fetchDeliveryBoys();
@@ -179,13 +182,10 @@ const ListDeliveryBoys = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this delivery boy?"))
-      return;
-
     setError(null);
     try {
       const response = await fetchWithAuth(
-        `${process.env.REACT_APP_API_URL}/delivery-persons/${id}/`,
+        `${process.env.REACT_APP_API_URL}/admin/delivery-persons/${id}/`,
         {
           method: "DELETE",
           headers: getAuthHeaders(),
@@ -198,6 +198,8 @@ const ListDeliveryBoys = () => {
         throw new Error(errorMsg);
       }
       
+      setDeliveryBoyToDelete(null);
+      setSuccessModal(true);
       setSuccess("Delivery boy deleted successfully!");
       await fetchDeliveryBoys();
     } catch (err) {
@@ -237,7 +239,7 @@ const ListDeliveryBoys = () => {
           <Button
             size="sm"
             color="danger"
-            onClick={() => handleDelete(row.id)}
+            onClick={() => setDeliveryBoyToDelete(row)}
           >
             Delete
           </Button>
@@ -324,6 +326,25 @@ const ListDeliveryBoys = () => {
           <Button color="secondary" onClick={() => setEditModal(false)}>
             Cancel
           </Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={Boolean(deliveryBoyToDelete)} toggle={() => setDeliveryBoyToDelete(null)} centered>
+        <ModalHeader toggle={() => setDeliveryBoyToDelete(null)}>Delete Delivery Boy</ModalHeader>
+        <ModalBody>
+          Are you sure you want to delete <strong>{deliveryBoyToDelete?.name}</strong>?
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={() => setDeliveryBoyToDelete(null)}>Cancel</Button>
+          <Button color="danger" onClick={() => handleDelete(deliveryBoyToDelete.id)}>Delete</Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={successModal} toggle={() => setSuccessModal(false)} centered>
+        <ModalHeader toggle={() => setSuccessModal(false)}>Success</ModalHeader>
+        <ModalBody>{success}</ModalBody>
+        <ModalFooter>
+          <Button color="success" onClick={() => setSuccessModal(false)}>Continue</Button>
         </ModalFooter>
       </Modal>
     </React.Fragment>

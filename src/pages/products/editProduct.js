@@ -3,6 +3,7 @@ import {
   Button, Card, CardBody, CardTitle, Col, Container,
   Input, Label, Row, Nav, NavItem, NavLink,
   TabContent, TabPane, Form, Alert
+  , Modal, ModalHeader, ModalBody, ModalFooter
 } from "reactstrap";
 import Dropzone from "react-dropzone";
 import imageCompression from "browser-image-compression";
@@ -36,6 +37,7 @@ const EditProduct = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isCompressing, setIsCompressing] = useState(false);
   const [imageError, setImageError] = useState("");
+  const [successModal, setSuccessModal] = useState(false);
   const [formValues, setFormValues] = useState({
     name: "",
     category: "",
@@ -238,7 +240,7 @@ const EditProduct = () => {
       images: selectedFiles.filter(f => !f.formattedSize || f.formattedSize !== "Existing")
     };
 
-    dispatch(updateProduct(id, plainData, navigate, page));
+    dispatch(updateProduct(id, plainData, navigate, page, () => setSuccessModal(true)));
   };
 
   const handleImageDelete = (index) => {
@@ -480,6 +482,15 @@ const EditProduct = () => {
           </Col>
         </Row>
       </Container>
+      <Modal isOpen={successModal} centered>
+        <ModalHeader>Product Updated</ModalHeader>
+        <ModalBody>The product was updated successfully.</ModalBody>
+        <ModalFooter>
+          <Button color="success" onClick={() => navigate(`/list-products?page=${page}`)}>
+            Continue
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 

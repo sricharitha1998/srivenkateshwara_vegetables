@@ -1,5 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Card, CardBody, Col, Container, Row, Spinner } from "reactstrap";
+import {
+  Card,
+  CardBody,
+  Col,
+  Container,
+  Row,
+  Spinner,
+  Button,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "reactstrap";
 import { Link } from "react-router-dom";
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 import DataTable from "react-data-table-component";
@@ -13,6 +25,8 @@ const ListCategories = () => {
   const [totalRows, setTotalRows] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [successModal, setSuccessModal] = useState(false);
   const breadcrumbItems = [
     { title: "Category", link: "#" },
     { title: "List Categories", link: "#" },
@@ -82,15 +96,15 @@ const ListCategories = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this category?")) return;
-
     try {
       const response = await makeAuthenticatedRequest(`${API_BASE}/categories/${id}/`, {
         method: "DELETE",
       });
 
       if (!response.ok) throw new Error(`Delete failed with status ${response.status}`);
-      fetchCategories();
+      setCategoryToDelete(null);
+      setSuccessModal(true);
+      fetchCategories(currentPage, perPage, searchTerm);
     } catch (err) {
       console.error("Delete error:", err.message);
       alert("Failed to delete category.");
@@ -134,7 +148,10 @@ const ListCategories = () => {
               <Link
                 to="#"
                 className="text-danger"
-                onClick={() => handleDelete(row.id)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setCategoryToDelete(row);
+                }}
               >
                 <i className="mdi mdi-trash-can font-size-18"></i>
               </Link>
@@ -206,6 +223,25 @@ const ListCategories = () => {
           </Col>
         </Row>
       </Container>
+
+      <Modal isOpen={Boolean(categoryToDelete)} toggle={() => setCategoryToDelete(null)} centered>
+        <ModalHeader toggle={() => setCategoryToDelete(null)}>Delete Category</ModalHeader>
+        <ModalBody>
+          Are you sure you want to delete <strong>{categoryToDelete?.name}</strong>?
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={() => setCategoryToDelete(null)}>Cancel</Button>
+          <Button color="danger" onClick={() => handleDelete(categoryToDelete.id)}>Delete</Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={successModal} toggle={() => setSuccessModal(false)} centered>
+        <ModalHeader toggle={() => setSuccessModal(false)}>Category Deleted</ModalHeader>
+        <ModalBody>Category deleted successfully.</ModalBody>
+        <ModalFooter>
+          <Button color="success" onClick={() => setSuccessModal(false)}>Continue</Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 };
