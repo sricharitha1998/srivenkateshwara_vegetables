@@ -69,12 +69,16 @@ function* fetchDashboardData() {
             responseLeastSold,
             responseReport,
             responseGenerate,
+            responseProducts,
+            responseOrders,
         ] = yield all([
             call(makeAuthenticatedRequest, `${API_BASE}/analytics/sales-per-month/`),
             call(makeAuthenticatedRequest, `${API_BASE}/analytics/most-sold-product/`),
             call(makeAuthenticatedRequest, `${API_BASE}/analytics/least-sold-product/`),
             call(makeAuthenticatedRequest, `${API_BASE}/analysis/sales-report/`),
             call(makeAuthenticatedRequest, `${API_BASE}/generate-sales-report/`),
+            call(makeAuthenticatedRequest, `${API_BASE}/products/?page_no=1&page_size=100`),
+            call(makeAuthenticatedRequest, `${API_BASE}/orders/?page_no=1&page_size=5`),
         ]);
 
         const [
@@ -83,13 +87,22 @@ function* fetchDashboardData() {
             resultLeastSold,
             resultReport,
             resultGenerate,
+            resultProducts,
+            resultOrders,
         ] = yield all([
             call([responseSales, responseSales.json]),
             call([responseMostSold, responseMostSold.json]),
             call([responseLeastSold, responseLeastSold.json]),
             call([responseReport, responseReport.json]),
             call([responseGenerate, responseGenerate.json]),
+            call([responseProducts, responseProducts.json]),
+            call([responseOrders, responseOrders.json]),
         ]);
+
+        const productsResponse = resultProducts?.data?.results || resultProducts?.data?.data || resultProducts?.data;
+        const ordersResponse = resultOrders?.data?.results || resultOrders?.data?.data || resultOrders?.data;
+        const products = Array.isArray(productsResponse) ? productsResponse : [];
+        const orders = Array.isArray(ordersResponse) ? ordersResponse : [];
 
         yield put(
             fetchDashboardDataSuccess({
@@ -98,6 +111,8 @@ function* fetchDashboardData() {
                 leastSoldProduct: resultLeastSold?.data || {},
                 salesReport: resultReport?.data || [],
                 generateSalesReport: resultGenerate?.data || {},
+                products,
+                latestOrders: orders,
             })
         );
     } catch (error) {

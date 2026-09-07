@@ -6,6 +6,8 @@ import Breadcrumbs from '../../components/Common/Breadcrumb';
 import Footer from "../../components/VerticalLayout/Footer";
 import MiniWidgets from "./MiniWidgets";
 import LatestTransactions from "./LatestTransactions";
+import LowStockItems from "./LowStockItems";
+import LatestOrders from "./LatestOrders";
 import { fetchDashboardData } from "../../store/actions";
 
 const Dashboard = () => {
@@ -50,6 +52,10 @@ const Dashboard = () => {
                     </Row>
                     <Row>
                         <LatestTransactions salesReport={data?.salesReport} generateReports={data?.generateSalesReport?.data} />
+                    </Row>
+                    <Row>
+                        <LowStockItems products={data?.products} />
+                        <LatestOrders orders={data?.latestOrders} />
                     </Row>
                 </Container>
                 <Footer />

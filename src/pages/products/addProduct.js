@@ -47,6 +47,7 @@ const AddProduct = () => {
   { label: "Liter (l)", value: "l" },
   { label: "Milliliter (ml)", value: "ml" },
   { label: "Piece (pc)", value: "pc" },
+  { label: "Packets", value: "packets" },
 ];
 
   // --- State ---

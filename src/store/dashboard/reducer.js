@@ -11,6 +11,8 @@ const initialState = {
         leastSoldProduct: {},
         salesReport: [],
         generateSalesReport: {},
+        products: [],
+        latestOrders: [],
     },
     error: "",
     loading: false,

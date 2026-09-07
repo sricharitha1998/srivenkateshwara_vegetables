@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardBody, Container, Modal, Spinner, ModalHeader, ModalBody, ModalFooter, Button, Input, FormGroup, Label, Row, Col } from "reactstrap";
 import { Link } from "react-router-dom";
 import Select from "react-select";
+import { jsPDF } from "jspdf";
 import { customSelectStyles } from "../../helpers/customStyles";
 import Breadcrumbs from '../../components/Common/Breadcrumb';
 import DataTable from "react-data-table-component";
@@ -232,24 +233,9 @@ console.log("Delivery Slots =>", slots);
     }
   };
 
-  const handleOrderAction = async (statusId, id) => {
-    await updateStatus({ status: Number(statusId) }, id);
-  };
-
   const handleDeliveryInputChange = (e) => {
     const { name, value } = e.target;
     setDeliveryInfo((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const sendRequest = (accessToken, requestBody, id) => {
-    return fetch(`${process.env.REACT_APP_API_URL}/orders/${id}/update-status/`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody),
-    });
   };
 
   const getUpdatedTokens = async (refreshToken) => {
@@ -262,44 +248,6 @@ console.log("Delivery Slots =>", slots);
     if (!response.ok) throw new Error("Session expired. Please login again.");
     const data = await response.json();
     return data?.data;
-  };
-
-  const updateStatus = async (requestBody, id) => {
-    try {
-      const userData = JSON.parse(localStorage.getItem("user"));
-      let accessToken = userData?.access;
-
-      if (!accessToken) {
-        alert("Access token missing. Please log in.");
-        return;
-      }
-
-      let response = await sendRequest(accessToken, requestBody, id);
-
-      if (response.status === 401) {
-        const newTokens = await getUpdatedTokens(userData?.refresh);
-        accessToken = newTokens.access;
-        userData.access = accessToken;
-        userData.refresh = newTokens.refresh;
-        localStorage.setItem("user", JSON.stringify(userData));
-        response = await sendRequest(accessToken, requestBody, id);
-      }
-
-      if (response.ok) {
-        if (isSearching) {
-          await handleSearch(currentPage, perPage);
-        } else {
-          await fetchOrders(selectedFilter, currentPage, perPage);
-        }
-      } else {
-        const errorData = await response.json();
-        console.error("Error:", errorData);
-        alert("Failed to update order status.");
-      }
-    } catch (error) {
-      console.error("Request failed:", error);
-      alert("Something went wrong.");
-    }
   };
 
   const fetchWithAuth = async (url, options) => {
@@ -422,6 +370,83 @@ console.log("Selected Delivery Slot", selectedDeliverySlot);
       console.error("Error during delivery assignment:", error);
       alert("Something went wrong: " + error.message);
     }
+  };
+
+  const downloadBill = (order) => {
+    const items = Array.isArray(order?.items) ? order.items : [];
+    const total = order?.final_amount ?? order?.payment_amount ?? 0;
+    const gst = order?.gst_amount ?? order?.tax_amount ?? order?.gst ?? 0;
+    const pdf = new jsPDF();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    let y = 20;
+
+    pdf.setFontSize(20);
+    pdf.setFont(undefined, "bold");
+    pdf.text("VEGGA FRESH", 20, y);
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, "normal");
+    pdf.text("Tax Invoice", 20, y + 8);
+    pdf.text(`Order ID: ${order?.order_id || "-"}`, pageWidth - 75, y);
+    pdf.text(`Date: ${order?.created_at ? formatDate(order.created_at) : new Date().toLocaleDateString("en-IN")}`, pageWidth - 75, y + 8);
+    y += 22;
+    pdf.line(20, y, pageWidth - 20, y);
+
+    y += 12;
+    pdf.setFont(undefined, "bold");
+    pdf.text("Billing Address", 20, y);
+    pdf.setFont(undefined, "normal");
+    pdf.text([
+      "VIJAY PATEL",
+      "H No.13-6-448/1, Sai Nagar Colony",
+      "Behind Vegetable Market, Guddimalkapur",
+      "Hyderabad, Telangana - 500028",
+      "GSTIN: 36DROPP2943D1ZJ",
+    ], 20, y + 7);
+
+    y += 42;
+    pdf.setFont(undefined, "bold");
+    pdf.text("Customer", 20, y);
+    pdf.setFont(undefined, "normal");
+    pdf.text([
+      String(order?.user || order?.address?.full_name || "-"),
+      String(order?.address?.mobile || "-"),
+      String(order?.address?.address_line1 || "-"),
+      `${order?.address?.city || "-"}, ${order?.address?.state || "-"} - ${order?.address?.pincode || "-"}`,
+    ], 20, y + 7);
+
+    y += 35;
+    const columns = [20, 32, 78, 120, 145, 175];
+    pdf.setFont(undefined, "bold");
+    pdf.setFillColor(241, 243, 245);
+    pdf.rect(20, y - 5, pageWidth - 40, 9, "F");
+    ["#", "Product", "Variant", "Qty", "Price", "Discounted"].forEach((heading, index) => {
+      pdf.text(heading, columns[index], y);
+    });
+    pdf.setFont(undefined, "normal");
+    y += 9;
+    (items.length ? items : [{}]).forEach((item, index) => {
+      if (y > 270) {
+        pdf.addPage();
+        y = 20;
+      }
+      const row = [
+        String(index + 1),
+        String(item.product_name || "No items available"),
+        String(item.product_variant || "-"),
+        String(item.quantity || "-"),
+        `INR ${item.price ?? "-"}`,
+        `INR ${item.discounted_price ?? item.price ?? "-"}`,
+      ];
+      row.forEach((value, valueIndex) => pdf.text(value.substring(0, 24), columns[valueIndex], y));
+      pdf.line(20, y + 3, pageWidth - 20, y + 3);
+      y += 9;
+    });
+
+    y += 8;
+    pdf.setFont(undefined, "bold");
+    pdf.text(`GST: INR ${gst}`, pageWidth - 65, y);
+    pdf.text(`Total: INR ${total}`, pageWidth - 65, y + 8);
+    pdf.save(`bill-${order?.order_id || "order"}.pdf`);
   };
 
   const formatDate = (isoDate) => {
@@ -578,7 +603,6 @@ if (slot) {
     {
       name: "Actions",
       cell: (row) => {
-        const currentStatus = status.find((statusItem) => statusItem.name === row.status);
         return (
           <div className="d-flex align-items-center gap-2 flex-wrap">
             <Button size="sm" color="info" onClick={() => openOrderModal(row)}>
@@ -587,28 +611,15 @@ if (slot) {
             <Button size="sm" color="primary" onClick={() => toggleModal(row)}>
               Assign
             </Button>
-            <Input
-              type="select"
-              value={currentStatus?.id || ""}
-              onChange={(e) => handleOrderAction(e.target.value, row.id)}
-              style={{ width: 150 }}
-            >
-              <option value="">Change status</option>
-              {status?.map((statusItem) => (
-                <option key={statusItem.id} value={statusItem.id}>
-                  {statusItem.name}
-                </option>
-              ))}
-            </Input>
           </div>
         );
       },
       ignoreRowClick: true,
       allowOverflow: true,
       button: true,
-      minWidth: "230px",
+      minWidth: "170px",
     },
-  ], [status]);
+  ], []);
 
 
   const breadcrumbItems = [
@@ -796,6 +807,9 @@ if (slot) {
           )}
         </ModalBody>
         <ModalFooter>
+          <Button color="primary" onClick={() => downloadBill(selectedOrder)}>
+            <i className="mdi mdi-download me-1"></i> Download Bill
+          </Button>
           <Button color="secondary" onClick={closeOrderModal}>
             Close
           </Button>
