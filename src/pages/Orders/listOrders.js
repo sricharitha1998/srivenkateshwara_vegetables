@@ -378,74 +378,207 @@ console.log("Selected Delivery Slot", selectedDeliverySlot);
     const gst = order?.gst_amount ?? order?.tax_amount ?? order?.gst ?? 0;
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
-    let y = 20;
+    const margin = 14;
+    const contentWidth = pageWidth - margin * 2;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const lineHeight = 4.5;
+    let y = 16;
 
-    pdf.setFontSize(20);
+    const numberToWords = (value) => {
+      const smallNumbers = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+      const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+      const number = Math.floor(value);
+
+      if (number < 20) return smallNumbers[number];
+      if (number < 100) return `${tens[Math.floor(number / 10)]}${number % 10 ? ` ${smallNumbers[number % 10]}` : ""}`;
+      if (number < 1000) return `${smallNumbers[Math.floor(number / 100)]} Hundred${number % 100 ? ` ${numberToWords(number % 100)}` : ""}`;
+
+      const groups = [[10000000, "Crore"], [100000, "Lakh"], [1000, "Thousand"]];
+      const group = groups.find(([divisor]) => number >= divisor);
+      if (group) {
+        const [divisor, label] = group;
+        const remainder = number % divisor;
+        return `${numberToWords(Math.floor(number / divisor))} ${label}${remainder ? ` ${numberToWords(remainder)}` : ""}`;
+      }
+
+      return "Zero";
+    };
+
+    const totalValue = Number(total) || 0;
+    let wholeRupees = Math.floor(Math.abs(totalValue));
+    let paise = Math.round((Math.abs(totalValue) - wholeRupees) * 100);
+    if (paise === 100) {
+      wholeRupees += 1;
+      paise = 0;
+    }
+    const amountInWords = `${totalValue < 0 ? "Minus " : ""}${numberToWords(wholeRupees)} Rupees${paise ? ` and ${numberToWords(paise)} Paise` : ""} Only`;
+    pdf.setFontSize(8);
     pdf.setFont(undefined, "bold");
-    pdf.text("VEGGA FRESH", 20, y);
+    const amountWordsLines = pdf.splitTextToSize(`Total Amount in Words: ${amountInWords}`, contentWidth - 8);
+    const amountWordsHeight = Math.max(12, amountWordsLines.length * 4 + 6);
+
+    const drawTableHeader = () => {
+      const columnWidths = [10, 47, 12, 25, 30, 34, contentWidth - 158];
+      const headings = [
+        "S No",
+        "Description of Item",
+        "Qty",
+        "Unit Price",
+        "Taxable Amount",
+        "Tax Rate (CGST+SGST+IGST)%",
+        "Total Amount",
+      ];
+      const wrappedHeadings = headings.map((heading, index) =>
+        pdf.splitTextToSize(heading, columnWidths[index] - 4)
+      );
+      const headerHeight = Math.max(12, ...wrappedHeadings.map((lines) => lines.length * 3.5 + 5));
+      let x = margin;
+      pdf.setFontSize(7);
+      pdf.setFont(undefined, "bold");
+      pdf.setTextColor(25, 25, 25);
+      wrappedHeadings.forEach((lines, index) => {
+        pdf.setFillColor(235, 238, 240);
+        pdf.rect(x, y, columnWidths[index], headerHeight, "F");
+        pdf.setDrawColor(80, 80, 80);
+        pdf.rect(x, y, columnWidths[index], headerHeight, "S");
+        pdf.text(lines, x + 2, y + 4);
+        x += columnWidths[index];
+      });
+      pdf.setFont(undefined, "normal");
+      return { columnWidths, headerHeight };
+    };
+
+    pdf.setFontSize(18);
+    pdf.setFont(undefined, "bold");
+    pdf.text("VEGGA FRESH", margin, y);
     pdf.setFontSize(12);
-    pdf.setFont(undefined, "normal");
-    pdf.text("Tax Invoice", 20, y + 8);
-    pdf.text(`Order ID: ${order?.order_id || "-"}`, pageWidth - 75, y);
-    pdf.text(`Date: ${order?.created_at ? formatDate(order.created_at) : new Date().toLocaleDateString("en-IN")}`, pageWidth - 75, y + 8);
-    y += 22;
-    pdf.line(20, y, pageWidth - 20, y);
+    pdf.text("Tax Invoice", margin, y + 7);
 
-    y += 12;
-    pdf.setFont(undefined, "bold");
-    pdf.text("Billing Address", 20, y);
+    const metaX = pageWidth - 78;
+    pdf.setFontSize(9);
     pdf.setFont(undefined, "normal");
-    pdf.text([
-      "VIJAY PATEL",
+    pdf.text(`Order ID: ${order?.order_id || "-"}`, metaX, y - 1);
+    pdf.text(`Date: ${order?.created_at ? formatDate(order.created_at) : new Date().toLocaleDateString("en-IN")}`, metaX, y + 6);
+    y += 13;
+    pdf.setDrawColor(80, 80, 80);
+    pdf.line(margin, y, pageWidth - margin, y);
+    y += 7;
+
+    const addressWidth = (contentWidth - 6) / 2;
+    const billingLines = [
+      "VEGGA FRESH",
       "H No.13-6-448/1, Sai Nagar Colony",
       "Behind Vegetable Market, Guddimalkapur",
       "Hyderabad, Telangana - 500028",
       "GSTIN: 36DROPP2943D1ZJ",
-    ], 20, y + 7);
-
-    y += 42;
-    pdf.setFont(undefined, "bold");
-    pdf.text("Customer", 20, y);
-    pdf.setFont(undefined, "normal");
-    pdf.text([
-      String(order?.user || order?.address?.full_name || "-"),
-      String(order?.address?.mobile || "-"),
-      String(order?.address?.address_line1 || "-"),
-      `${order?.address?.city || "-"}, ${order?.address?.state || "-"} - ${order?.address?.pincode || "-"}`,
-    ], 20, y + 7);
-
-    y += 35;
-    const columns = [20, 32, 78, 120, 145, 175];
-    pdf.setFont(undefined, "bold");
-    pdf.setFillColor(241, 243, 245);
-    pdf.rect(20, y - 5, pageWidth - 40, 9, "F");
-    ["#", "Product", "Variant", "Qty", "Price", "Discounted"].forEach((heading, index) => {
-      pdf.text(heading, columns[index], y);
+    ];
+    const address = order?.address || {};
+    const customerLines = [
+      String(order?.user || address.full_name || "-"),
+      String(address.mobile || "-"),
+      String(address.address_line1 || "-"),
+      ...(address.address_line2 ? [String(address.address_line2)] : []),
+      `${address.city || "-"}, ${address.state || "-"} - ${address.pincode || "-"}`,
+    ];
+    const addressBoxHeight = 38;
+    [
+      { x: margin, title: "Billing Address", lines: billingLines },
+      { x: margin + addressWidth + 6, title: "Customer", lines: customerLines },
+    ].forEach((section) => {
+      pdf.rect(section.x, y, addressWidth, addressBoxHeight);
+      pdf.setFontSize(9);
+      pdf.setFont(undefined, "bold");
+      pdf.text(section.title, section.x + 3, y + 5);
+      pdf.setFontSize(8);
+      pdf.setFont(undefined, "normal");
+      const wrappedLines = section.lines.flatMap((line) => pdf.splitTextToSize(line, addressWidth - 6));
+      pdf.text(wrappedLines, section.x + 3, y + 10);
     });
-    pdf.setFont(undefined, "normal");
-    y += 9;
+    y += addressBoxHeight + 8;
+
+    let { columnWidths, headerHeight } = drawTableHeader();
+    y += headerHeight;
+    pdf.setFontSize(8);
     (items.length ? items : [{}]).forEach((item, index) => {
-      if (y > 270) {
-        pdf.addPage();
-        y = 20;
-      }
-      const row = [
+      const quantity = Number(item.quantity) || 0;
+      const unitPrice = Number(item.unit_price ?? item.price ?? 0) || 0;
+      const effectiveUnitPrice = Number(item.discounted_price ?? item.unit_price ?? item.price ?? 0) || 0;
+      const cgstRate = Number(item.cgst_rate ?? item.cgst_percentage ?? item.cgst_percent ?? 0) || 0;
+      const sgstRate = Number(item.sgst_rate ?? item.sgst_percentage ?? item.sgst_percent ?? 0) || 0;
+      const igstRate = Number(item.igst_rate ?? item.igst_percentage ?? item.igst_percent ?? 0) || 0;
+      const taxableAmount = Number(item.taxable_amount ?? item.taxableAmount ?? effectiveUnitPrice * quantity);
+      const calculatedTax = taxableAmount * (cgstRate + sgstRate + igstRate) / 100;
+      const hasComponentTaxAmounts = item.cgst_amount != null || item.sgst_amount != null || item.igst_amount != null;
+      const componentTax = Number(item.cgst_amount || 0) + Number(item.sgst_amount || 0) + Number(item.igst_amount || 0);
+      const itemTax = Number(item.tax_amount ?? item.gst_amount ?? (hasComponentTaxAmounts ? componentTax : calculatedTax));
+      const totalAmount = Number(item.total_amount ?? item.total ?? (taxableAmount + itemTax));
+      const values = [
         String(index + 1),
-        String(item.product_name || "No items available"),
-        String(item.product_variant || "-"),
-        String(item.quantity || "-"),
-        `INR ${item.price ?? "-"}`,
-        `INR ${item.discounted_price ?? item.price ?? "-"}`,
+        [item.product_name, item.product_variant].filter(Boolean).join(" - ") || "No items available",
+        String(item.quantity ?? "-"),
+        `INR ${unitPrice.toFixed(2)}`,
+        `INR ${taxableAmount.toFixed(2)}`,
+        `${cgstRate}+${sgstRate}+${igstRate}%`,
+        `INR ${totalAmount.toFixed(2)}`,
       ];
-      row.forEach((value, valueIndex) => pdf.text(value.substring(0, 24), columns[valueIndex], y));
-      pdf.line(20, y + 3, pageWidth - 20, y + 3);
-      y += 9;
+      const wrappedValues = values.map((value, valueIndex) =>
+        pdf.splitTextToSize(value, columnWidths[valueIndex] - 4)
+      );
+      const rowHeight = Math.max(9, ...wrappedValues.map((lines) => lines.length * lineHeight + 4));
+
+      if (y + rowHeight > pageHeight - 24) {
+        pdf.addPage();
+        y = 16;
+        ({ columnWidths, headerHeight } = drawTableHeader());
+        y += headerHeight;
+      }
+
+      let x = margin;
+      values.forEach((value, valueIndex) => {
+        pdf.rect(x, y, columnWidths[valueIndex], rowHeight);
+        pdf.text(wrappedValues[valueIndex], x + 2, y + 5);
+        x += columnWidths[valueIndex];
+      });
+      y += rowHeight;
     });
 
-    y += 8;
+    const totalsHeight = 18;
+    const signatureHeight = 36;
+    const finalBlockHeight = 7 + totalsHeight + 5 + amountWordsHeight + 5 + signatureHeight;
+    if (y + finalBlockHeight > pageHeight - margin) {
+      pdf.addPage();
+      y = 16;
+    } else {
+      y += 7;
+    }
+    const totalsWidth = 64;
+    const totalsX = pageWidth - margin - totalsWidth;
+    pdf.rect(totalsX, y, totalsWidth, totalsHeight);
+    pdf.line(totalsX, y + 9, pageWidth - margin, y + 9);
+    pdf.setFontSize(9);
     pdf.setFont(undefined, "bold");
-    pdf.text(`GST: INR ${gst}`, pageWidth - 65, y);
-    pdf.text(`Total: INR ${total}`, pageWidth - 65, y + 8);
+    pdf.text(`GST: INR ${gst}`, totalsX + 3, y + 6);
+    pdf.text(`Total: INR ${total}`, totalsX + 3, y + 15);
+    y += totalsHeight + 5;
+
+    pdf.rect(margin, y, contentWidth, amountWordsHeight);
+    pdf.setFontSize(8);
+    pdf.setFont(undefined, "bold");
+    pdf.text(amountWordsLines, margin + 4, y + 5);
+    y += amountWordsHeight + 5;
+
+    const signatureGap = 8;
+    const signatureWidth = (contentWidth - signatureGap) / 2;
+    [
+      { x: margin, label: "Customer / Consumer Signature" },
+      { x: margin + signatureWidth + signatureGap, label: "Authorized Owner Signature" },
+    ].forEach((signature) => {
+      pdf.rect(signature.x, y, signatureWidth, signatureHeight);
+      pdf.setFontSize(8);
+      pdf.setFont(undefined, "normal");
+      pdf.text(signature.label, signature.x + 3, y + 6);
+      pdf.line(signature.x + 3, y + signatureHeight - 6, signature.x + signatureWidth - 3, y + signatureHeight - 6);
+    });
     pdf.save(`bill-${order?.order_id || "order"}.pdf`);
   };
 
